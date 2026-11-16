@@ -10,6 +10,7 @@ import type { Settings } from "./schema";
 import { SessionPicker } from "./session-picker";
 import { HermesSettings } from "./settings";
 import { errorText } from "./errors";
+import { parseEnvironment, planEnvironmentImport } from "./environment";
 
 const VIEW = "kk-hermes-chat";
 
@@ -17,7 +18,7 @@ class HermesView extends ItemView {
   private panel: ChatPanel | null = null;
   constructor(leaf: WorkspaceLeaf, private readonly owner: HermesPlugin) { super(leaf); }
   override getViewType(): string { return VIEW; }
-  override getDisplayText(): string { return "연이 채팅"; }
+  override getDisplayText(): string { return "Yeon Chat"; }
   override getIcon(): string { return "messages-square"; }
   override async onOpen(): Promise<void> {
     this.panel = new ChatPanel(this.contentEl, this.owner.store, {
@@ -43,8 +44,8 @@ export default class HermesPlugin extends Plugin {
     this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
     this.registerView(VIEW, (leaf) => new HermesView(leaf, this));
     this.addSettingTab(new HermesSettings(this.app, this));
-    this.addRibbonIcon("messages-square", "연이 채팅 열기", () => { void this.openChat(); });
-    this.addCommand({ id: "open-chat", name: "연이 채팅 열기", callback: () => { void this.openChat(); } });
+    this.addRibbonIcon("messages-square", "Hermes Chat Open", () => { void this.openChat(); });
+    this.addCommand({ id: "open-chat", name: "Hermes Chat Open", callback: () => { void this.openChat(); } });
     this.addCommand({ id: "connect", name: "회사 연이에 연결", callback: () => { void this.store.connect(); } });
     this.addCommand({ id: "disconnect", name: "회사 연결 해제", callback: () => this.store.disconnect() });
     this.registerDomEvent(document, "visibilitychange", () => {
@@ -59,6 +60,26 @@ export default class HermesPlugin extends Plugin {
       else throw error;
     }).then(() => this.saveData(data));
     return this.saveQueue;
+  }
+  async importEnvironment(contents: string): Promise<void> {
+    const planned = planEnvironmentImport(this.settings, parseEnvironment(contents));
+    const previous = this.settings;
+    if (!planned.connectionChanged) {
+      const before = { endpoint: previous.endpoint, profileId: previous.profileId, environment: previous.environment };
+      Object.assign(previous, { endpoint: planned.settings.endpoint, profileId: planned.settings.profileId, environment: planned.settings.environment });
+      try { await this.saveSettings(); }
+      catch (error) { Object.assign(previous, before); throw error; }
+      this.store.emit();
+      return;
+    }
+    this.store.disconnect();
+    this.settings = planned.settings;
+    try { await this.saveSettings(); }
+    catch (error) { this.settings = previous; if (this.credentials.deviceId) await this.store.connect(); throw error; }
+    this.credentials.clear();
+    this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
+    const leaves = this.app.workspace.getLeavesOfType(VIEW);
+    for (const leaf of leaves) { await leaf.setViewState({ type: "empty" }); await leaf.setViewState({ type: VIEW }); }
   }
   async openChat(): Promise<void> {
     try {

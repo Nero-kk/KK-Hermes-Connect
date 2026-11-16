@@ -79,11 +79,17 @@ def snapshot(raw: JsonObject, history: JsonObject, profile: str) -> JsonObject:
     return {
         "logicalSessionId": text(raw.get("session_id")),
         "profileId": profile,
-        "title": str(info.get("title") or "연이와 대화"),
+        "title": str(info.get("title") or "Chat with Yeon"),
         "source": str(info.get("source") or "unknown"),
         "running": raw.get("running", False),
         "revision": integer(raw.get("revision")),
         "generation": integer(raw.get("execution_generation")),
+        "modelSettings": {
+            "model": info.get("model") or "",
+            "provider": info.get("provider") or "",
+            "reasoning": info.get("reasoning_effort") or "",
+            "reasoningWire": info.get("reasoning_effort_wire") or "",
+        },
         "replayEpoch": text(raw.get("replay_epoch")),
         "sequence": integer(raw.get("last_sequence")),
         **history,

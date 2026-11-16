@@ -3,6 +3,8 @@ import { BridgeError } from "./errors";
 
 const bootstrap = z.object({ apiVersion: z.literal(1), wsUrl: z.string(), ticket: z.string() });
 const paired = z.object({ apiVersion: z.literal(1), deviceId: z.string(), token: z.string(), serverId: z.string(), profileId: z.string() });
+const registrationCode = z.string().trim().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const deviceLabel = z.string().trim().min(1).max(100);
 const envelope = z.object({ jsonrpc: z.literal("2.0"), id: z.union([z.string(), z.number(), z.null()]).optional(),
   method: z.string().optional(), params: z.unknown().optional(), result: z.unknown().optional(),
   error: z.object({ code: z.number(), message: z.string() }).optional() });
@@ -57,7 +59,12 @@ export class Transport {
   onEvent: (method: string, params: unknown) => void = () => undefined;
   onClose: (code: number) => void = () => undefined;
   async pair(url: string, code: string, label: string): Promise<z.infer<typeof paired>> {
-    return paired.parse(await post(endpoint(url), "pair", { body: { code, label } }));
+    const origin = endpoint(url);
+    const parsedCode = registrationCode.safeParse(code);
+    if (!parsedCode.success) throw new BridgeError(code.trim() ? "invalid_pair_code_format" : "pair_code_required");
+    const parsedLabel = deviceLabel.safeParse(label);
+    if (!parsedLabel.success) throw new BridgeError("invalid_device_label");
+    return paired.parse(await post(origin, "pair", { body: { code: parsedCode.data, label: parsedLabel.data } }));
   }
   async connect(url: string, token: string): Promise<void> {
     this.close();

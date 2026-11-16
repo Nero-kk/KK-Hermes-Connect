@@ -4,9 +4,11 @@ import { eventSchema, hello, history, operation, operationId, sessionId, session
 import type { Message, NativeEvent, Operation, Pending, RequestCard, Settings, Snapshot } from "./schema";
 import type { Credentials } from "./credentials";
 import { Transport } from "./transport";
+import { ModelStore } from "./model-store";
 
 export class ChatStore {
   readonly transport = new Transport();
+  readonly models = new ModelStore(this.transport, () => this.emit());
   readonly listeners = new Set<() => void>();
   state: "offline" | "connecting" | "recovering" | "ready" | "blocked" = "offline";
   status = "연결 설정에서 이 기기를 등록하세요.";
@@ -43,14 +45,14 @@ export class ChatStore {
       if (!token) throw new BridgeError("authentication_required");
       await this.transport.connect(this.settings.endpoint, token);
       const identity = hello.parse(await this.transport.rpc("bridge.hello", {
-        apiVersion: 1, clientVersion: "0.1.0", deviceId: this.credentials.deviceId,
+        apiVersion: 1, clientVersion: "0.3.0", deviceId: this.credentials.deviceId,
       }));
       if (identity.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
       if (this.settings.serverId !== identity.serverId) throw new BridgeError("server_mismatch");
       this.state = "recovering";
       if (this.settings.lastSession) await this.open(this.settings.lastSession);
       await this.recover();
-      this.state = "ready"; this.status = "연결됨 · orchestrator_yeon"; this.backoff = 0;
+      this.state = "ready"; this.status = `연결됨 · ${identity.profileName}`; this.backoff = 0;
       this.poll = window.setInterval(() => { void this.refresh().catch((error: unknown) => this.report(error)); }, 3000);
     } catch (error) {
       if (error instanceof Error) {
@@ -68,6 +70,7 @@ export class ChatStore {
     this.retry = window.setTimeout(() => { if (!this.stopped) void this.connect(); }, seconds * 1000 * (0.8 + Math.random() * 0.4));
   }
   disconnect(): void {
+    this.models.reset();
     this.stopped = true;
     if (this.poll !== undefined) window.clearInterval(this.poll);
     if (this.retry !== undefined) window.clearTimeout(this.retry);
@@ -93,6 +96,7 @@ export class ChatStore {
       this.current = { ...next, messages: [...prefix, ...next.messages], nextCursor: old.nextCursor };
     } else this.current = next;
     this.operations = next.operations;
+    this.models.sync(this.current);
     this.cursor = { epoch: next.replayEpoch, sequence: next.sequence, instance: next.instanceId };
     this.settings.lastSession = next.logicalSessionId; await this.save();
     if (previous && previous !== next.logicalSessionId) await this.transport.rpc("sessions.release", { logicalSessionId: previous });
@@ -121,7 +125,7 @@ export class ChatStore {
   }
   get busy(): boolean { return this.settings.pending.some((item) => item.serverId === this.settings.serverId); }
   async submit(kind: Pending["kind"]): Promise<void> {
-    if (this.busy || this.state !== "ready") return;
+    if (this.busy || this.models.changing || this.state !== "ready") return;
     const id = operationId.parse(crypto.randomUUID());
     const logicalSessionId = this.current?.logicalSessionId ?? "";
     if (kind !== "create" && !logicalSessionId) return;

@@ -2,6 +2,7 @@ import { renderMarkdown } from "./markdown";
 import { button, requestForm } from "./request-ui";
 import { terminal } from "./errors";
 import type { ChatStore } from "./store";
+import { ModelPanel } from "./model-panel";
 
 type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean };
 const phases: Readonly<Record<string, string>> = {
@@ -21,6 +22,7 @@ export class ChatPanel {
   private readonly send: HTMLButtonElement;
   private readonly create: HTMLButtonElement;
   private readonly fork: HTMLButtonElement;
+  private readonly models: ModelPanel;
   private timer: number | undefined;
   private requestKey = "";
   private messageKey = "";
@@ -31,17 +33,17 @@ export class ChatPanel {
   constructor(private readonly root: HTMLElement, readonly store: ChatStore, actions: Actions) {
     root.replaceChildren(); root.classList.add("kkh-chat");
     const header = document.createElement("header"); header.className = "kkh-header";
-    this.heading = document.createElement("h2"); this.heading.textContent = "연이 채팅";
+    this.heading = document.createElement("h2"); this.heading.textContent = "Yeon Chat";
     this.status = document.createElement("p"); this.status.className = "kkh-status";
     this.status.setAttribute("role", "status"); this.source = document.createElement("p");
     const toolbar = document.createElement("nav"); toolbar.className = "kkh-toolbar"; toolbar.setAttribute("aria-label", "대화 관리");
     button(toolbar, "연결", () => { void store.connect(); });
     button(toolbar, "대화 선택", actions.pick);
     this.create = button(toolbar, "새 대화", () => this.run(() => store.submit("create")));
-    this.fork = button(toolbar, "분기", () => {
+    this.fork = button(toolbar, "대화 분기", () => {
       if (window.confirm("원본을 보존하고 Hermes native 방식으로 문맥을 승계한 새 대화를 만듭니다. 분기할까요?")) this.run(() => store.submit("fork"));
     });
-    button(toolbar, "상태 확인", () => this.run(() => store.refresh()));
+    this.fork.title = "현재 대화의 문맥을 이어받아 별도의 새 대화를 만듭니다. 원래 대화는 유지됩니다.";
     button(toolbar, "설정", actions.settings);
     header.append(this.heading, this.status, this.source, toolbar);
     this.messages = document.createElement("section"); this.messages.className = "kkh-messages";
@@ -50,15 +52,16 @@ export class ChatPanel {
     this.requests.setAttribute("aria-label", "승인 및 추가 질문");
     this.operations = document.createElement("div"); this.operations.className = "kkh-operations";
     const composer = document.createElement("form"); composer.className = "kkh-composer";
-    const label = document.createElement("label"); label.textContent = "연이에게 메시지";
+    const label = document.createElement("label"); label.textContent = "Message Yeon";
     this.input = document.createElement("textarea"); this.input.rows = 3; this.input.value = store.draft;
-    this.input.placeholder = "메시지를 입력하세요"; this.input.setAttribute("aria-label", "연이에게 메시지");
+    this.input.placeholder = "메시지를 입력하세요"; this.input.setAttribute("aria-label", "Message Yeon");
     label.append(this.input); this.send = document.createElement("button");
     this.send.type = "submit"; this.send.className = "mod-cta"; this.send.textContent = "전송";
-    composer.append(this.operations, label, this.send);
+    this.models = new ModelPanel(store.models, this.controller.signal);
+    composer.append(this.operations, label, this.send, this.models.element);
     root.append(header, this.messages, this.requests, composer);
     const options = { signal: this.controller.signal };
-    this.input.addEventListener("input", () => { store.draft = this.input.value; this.send.disabled = !store.draft.trim() || store.busy || store.state !== "ready"; }, options);
+    this.input.addEventListener("input", () => { store.draft = this.input.value; this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready"; }, options);
     this.input.addEventListener("compositionstart", () => { this.composing = true; }, options);
     this.input.addEventListener("compositionend", () => { this.composing = false; }, options);
     this.input.addEventListener("keydown", (event) => {
@@ -75,18 +78,25 @@ export class ChatPanel {
   private run(action: () => Promise<void>): void { void action().catch((error: unknown) => { this.requestKey = ""; this.store.report(error); }); }
   render(): void {
     const store = this.store; const current = store.current;
-    this.heading.textContent = current?.title ?? "연이 채팅";
+    this.heading.textContent = current?.title ?? "Yeon Chat";
     this.status.textContent = store.status;
     this.status.dataset["state"] = store.state;
     this.source.textContent = current ? `${current.source} · ${current.logicalSessionId}${current.source === "slack" ? " · Slack과 같은 대화: 응답이 Slack에도 표시될 수 있음" : current.source === "unknown" ? " · 응답이 원래 연결 채널에도 전달될 수 있음" : ""}` : "기기를 연결한 뒤 기존 대화를 선택하거나 새 대화를 만드세요.";
-    this.send.disabled = store.state !== "ready" || store.busy || !store.draft.trim();
-    this.create.disabled = store.state !== "ready" || store.busy;
-    this.fork.disabled = store.state !== "ready" || store.busy || !current || current.running;
+    this.send.disabled = store.state !== "ready" || store.busy || store.models.changing || !store.draft.trim();
+    this.models.render(store.state !== "ready" || store.busy, current?.running ?? false);
+    this.create.disabled = store.state !== "ready" || store.busy || store.models.changing;
+    this.fork.disabled = store.state !== "ready" || store.busy || store.models.changing || !current || current.running;
     this.operations.replaceChildren();
     const active = store.operations.filter((item) => !terminal(item.phase));
     const settled = store.operations.findLast((item) => terminal(item.phase));
     if (!active.length && settled) { const result = document.createElement("p"); result.textContent = phases[settled.phase] ?? settled.phase; this.operations.append(result); }
-    if (store.busy && !active.length) { const pending = document.createElement("p"); pending.textContent = "전송 결과 확인 필요 · 상태 확인으로 서버 영수증을 조회하세요."; this.operations.append(pending); }
+    if (store.busy && !active.length) {
+      const pending = document.createElement("p");
+      pending.textContent = store.state === "ready" || store.state === "recovering"
+        ? "전송 결과 확인 필요 · 서버의 실행 상태를 자동으로 다시 조회하고 있습니다."
+        : "전송 결과 확인 필요 · 연결 후 서버의 실행 상태를 다시 조회합니다.";
+      this.operations.append(pending);
+    }
     for (const item of active) {
       const row = document.createElement("div"); const label = document.createElement("span");
       label.textContent = `${phases[item.phase] ?? item.phase}${item.result["cancelRequested"] ? " · 중단 요청됨" : ""}`; row.append(label);
@@ -111,7 +121,7 @@ export class ChatPanel {
     if (current?.nextCursor) button(this.messages, "이전 이력 불러오기", () => this.run(() => store.older()));
     if (!current?.messages.length && !store.stream) {
       const empty = document.createElement("p"); empty.className = "kkh-empty";
-      empty.textContent = current ? "아직 저장된 메시지가 없습니다." : "회사 연이와 대화를 이어가세요."; this.messages.append(empty);
+      empty.textContent = current ? "아직 저장된 메시지가 없습니다." : "Chat with Yeon"; this.messages.append(empty);
     }
     for (const message of current?.messages ?? []) {
       const article = document.createElement("article"); article.dataset["id"] = message.id; article.className = `kkh-message kkh-role-${message.role}`;

@@ -8,6 +8,7 @@ from anyio.abc import TaskGroup
 from pydantic import JsonValue
 
 from .metadata import Metadata
+from .model_controls import ModelControls
 from .models import BridgeError, Config, JsonObject, obj, text
 from .native import Native
 from .operations import Operations
@@ -24,6 +25,7 @@ class Hub:
         self.native.on_event = self.event
         self.operations = Operations(self.native, metadata)
         self.requests = Requests(self.native)
+        self.model_controls = ModelControls(self.native)
         self.viewers: list[Viewer] = []
         self.mounted: dict[str, float] = {}
         self.catalog: dict[str, JsonObject] = {}
@@ -67,7 +69,7 @@ class Hub:
             raw["info"] = {
                 **info,
                 "source": known.get("source", "unknown"),
-                "title": known.get("title", "연이와 대화"),
+                "title": known.get("title", "Chat with Yeon"),
             }
         operations: list[JsonValue] = []
         for item in self.metadata.for_session(canonical, viewer.device):
@@ -174,6 +176,10 @@ class Hub:
                 return {"operation": operation}
             case "requests.respond":
                 return await self.requests.respond(params)
+            case "models.get":
+                return await self.model_controls.read(session_id)
+            case "models.set" | "reasoning.set":
+                return await self.model_controls.change(method, params)
             case _:
                 raise BridgeError("method_not_allowed")
 

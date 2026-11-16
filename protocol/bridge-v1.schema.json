@@ -292,6 +292,116 @@
       ],
       "title": "Respond",
       "type": "object"
+    },
+    "ModelChange": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "requestId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Requestid",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "minimum": 0,
+          "title": "Expectedrevision",
+          "type": "integer"
+        },
+        "expectedGeneration": {
+          "minimum": 0,
+          "title": "Expectedgeneration",
+          "type": "integer"
+        },
+        "model": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        },
+        "confirm": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirm"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "requestId",
+        "expectedRevision",
+        "expectedGeneration",
+        "model",
+        "provider"
+      ],
+      "title": "ModelChange",
+      "type": "object"
+    },
+    "ReasoningChange": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "requestId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Requestid",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "minimum": 0,
+          "title": "Expectedrevision",
+          "type": "integer"
+        },
+        "expectedGeneration": {
+          "minimum": 0,
+          "title": "Expectedgeneration",
+          "type": "integer"
+        },
+        "effort": {
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "title": "Effort",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "requestId",
+        "expectedRevision",
+        "expectedGeneration",
+        "effort"
+      ],
+      "title": "ReasoningChange",
+      "type": "object"
     }
   },
   "oneOf": [
@@ -616,6 +726,87 @@
         },
         "params": {
           "$ref": "#/$defs/Respond"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "models.get"
+        },
+        "params": {
+          "$ref": "#/$defs/Session"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "models.set"
+        },
+        "params": {
+          "$ref": "#/$defs/ModelChange"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "reasoning.set"
+        },
+        "params": {
+          "$ref": "#/$defs/ReasoningChange"
         }
       }
     }

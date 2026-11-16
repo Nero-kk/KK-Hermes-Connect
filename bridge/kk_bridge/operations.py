@@ -54,7 +54,7 @@ class Operations:
                         {
                             "request_id": f"kkh-{operation_id}",
                             "source": "gui",
-                            "client": {"name": "kk-hermes-connect", "version": "0.1.0"},
+                            "client": {"name": "kk-hermes-connect", "version": "0.3.0"},
                         },
                     )
                     session_id = text(raw.get("session_id"))

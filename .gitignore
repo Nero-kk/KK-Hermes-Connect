@@ -12,3 +12,5 @@ evidence/
 .env.*
 *.sqlite3*
 *.db
+private/
+*.private.json

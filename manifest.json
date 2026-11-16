@@ -1,7 +1,7 @@
 {
   "id": "KK-Hermes-Connect",
   "name": "KK Hermes Connect",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "minAppVersion": "1.11.0",
   "description": "연이의 기존 Hermes 세션과 연결하는 모바일 공통 채팅.",
   "author": "Jin",

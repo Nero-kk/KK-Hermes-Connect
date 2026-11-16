@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { environmentDetails } from "./environment";
+import { modelValues } from "./model-schema";
 
 export const operationId = z.uuid().brand<"OperationId">();
 export const sessionId = z.string().min(1).brand<"SessionId">();
@@ -34,6 +36,7 @@ export const snapshot = history.extend({
   running: z.boolean(), revision: z.number(), generation: z.number(), replayEpoch: z.string(),
   sequence: z.number(), instanceId: z.string(), requests: z.array(requestCard),
   operations: z.array(operation),
+  modelSettings: modelValues.nullable().default(null),
 });
 export type Snapshot = z.infer<typeof snapshot>;
 export const summary = z.object({
@@ -55,8 +58,10 @@ export const pending = z.object({
 });
 export type Pending = z.infer<typeof pending>;
 export const settingsSchema = z.object({
-  endpoint: z.string().default("https://jin.tail8208fa.ts.net"),
-  profileId: z.string().default("/home/nero/.hermes/profiles/orchestrator_yeon"),
+  deviceLabel: z.string().max(100).default("Obsidian 기기"),
+  endpoint: z.string().default(""),
+  profileId: z.string().default(""),
+  environment: environmentDetails.default(() => environmentDetails.parse({})),
   serverId: z.string().default(""), lastSession: z.string().default(""),
   pending: z.array(pending).default([]),
 });

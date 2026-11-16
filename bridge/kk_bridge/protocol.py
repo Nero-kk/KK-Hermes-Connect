@@ -65,6 +65,24 @@ class Respond(Session):
     answer: JsonObject
 
 
+class SettingsChange(Session):
+    requestId: str = Field(
+        pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    )
+    expectedRevision: int = Field(ge=0)
+    expectedGeneration: int = Field(ge=0)
+
+
+class ModelChange(SettingsChange):
+    model: str = Field(min_length=1, max_length=512)
+    provider: str = Field(min_length=1, max_length=128)
+    confirm: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
+class ReasoningChange(SettingsChange):
+    effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]
+
+
 METHODS: dict[str, type[Params]] = {
     "bridge.hello": Hello,
     "bridge.ping": Ping,
@@ -78,6 +96,9 @@ METHODS: dict[str, type[Params]] = {
     "operations.get": Operation,
     "operations.cancel": Operation,
     "requests.respond": Respond,
+    "models.get": Session,
+    "models.set": ModelChange,
+    "reasoning.set": ReasoningChange,
 }
 
 

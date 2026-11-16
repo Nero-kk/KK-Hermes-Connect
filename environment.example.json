@@ -1,0 +1,21 @@
+{
+  "format": "kk-hermes-connect/environment",
+  "version": 1,
+  "connection": {
+    "endpoint": "https://company.example.ts.net",
+    "profileId": "/home/example/.hermes/profiles/assistant"
+  },
+  "environment": {
+    "tailscaleIp": "100.100.10.20",
+    "ubuntuUser": "example",
+    "windowsVaultPath": "D:\\Notes\\Vault",
+    "ubuntuHomePath": "/home/example",
+    "ubuntuPluginPath": "/opt/kk-hermes-connect",
+    "hermesExecutable": "/home/example/.local/bin/hermes",
+    "bridgeStatePath": "/home/example/.local/share/kk-hermes-connect",
+    "profileName": "assistant",
+    "slackChannelIds": [],
+    "verificationSessionIds": [],
+    "operationIds": []
+  }
+}

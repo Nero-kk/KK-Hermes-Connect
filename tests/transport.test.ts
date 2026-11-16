@@ -1,5 +1,25 @@
-import { describe, expect, it } from "vitest";
-import { endpoint, socketTarget } from "../src/transport";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { endpoint, socketTarget, Transport } from "../src/transport";
+
+afterEach(() => { vi.unstubAllGlobals(); });
+
+describe("registration input", () => {
+  it.each([
+    { code: "", label: "QA device", error: "pair_code_required" },
+    { code: "short", label: "QA device", error: "invalid_pair_code_format" },
+    { code: "a".repeat(129), label: "QA device", error: "invalid_pair_code_format" },
+    { code: "not a valid registration code", label: "QA device", error: "invalid_pair_code_format" },
+    { code: "a".repeat(32), label: " ", error: "invalid_device_label" },
+    { code: "a".repeat(32), label: "x".repeat(101), error: "invalid_device_label" },
+  ])("rejects $error before contacting the server", async ({ code, label, error }) => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ error: "invalid_schema" }), { status: 400 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(new Transport().pair("https://company.test", code, label)).rejects.toThrow(error);
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
 
 describe("credential destination", () => {
   it.each(["http://company.test", "https://user:secret@company.test", "https://company.test/path", "https://company.test/?target=evil", "file:///etc/passwd"])("rejects unsafe configured origin %s", (value) => {
