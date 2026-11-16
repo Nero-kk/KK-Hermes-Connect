@@ -1,0 +1,61 @@
+.kkh-chat {
+  display: flex; flex-direction: column; block-size: 100%; min-block-size: 0;
+  min-inline-size: 0; overflow: hidden; padding: 0; color: var(--text-normal);
+  background: var(--background-primary); font-family: var(--font-interface);
+  --kkh-gap: var(--size-4-3, 12px); --kkh-space: var(--size-4-4, 16px);
+}
+.kkh-chat *, .kkh-session-results * { box-sizing: border-box; min-inline-size: 0; }
+.kkh-header { padding: var(--kkh-space); flex: 0 0 auto; border-block-end: 1px solid var(--background-modifier-border); }
+.kkh-header h2 { color: var(--text-normal); font-size: var(--font-ui-large); margin: 0 0 var(--size-4-2, 8px); overflow-wrap: anywhere; }
+.kkh-header p { margin: var(--size-4-1, 4px) 0; font-size: var(--font-ui-small); overflow-wrap: anywhere; }
+.kkh-status { color: var(--text-normal); }
+.kkh-status[data-state="blocked"] { color: var(--text-error); }
+.kkh-toolbar { display: flex; flex-wrap: wrap; gap: var(--size-4-2, 8px); margin-block-start: var(--kkh-gap); }
+.kkh-chat button, .kkh-session-row { min-block-size: 44px; white-space: normal; overflow-wrap: anywhere; }
+.kkh-chat button:focus-visible, .kkh-chat textarea:focus-visible, .kkh-chat select:focus-visible,
+.kkh-session-row:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.kkh-chat button:disabled { opacity: 0.5; cursor: default; }
+.kkh-messages { flex: 1 1 0; min-block-size: 0; overflow-y: auto; overflow-x: hidden;
+  padding: var(--kkh-space); overscroll-behavior: contain; overflow-anchor: none; }
+.kkh-message { max-inline-size: 75ch; margin-inline: auto; padding-block: var(--kkh-gap) var(--kkh-space); overflow-wrap: anywhere; }
+.kkh-message + .kkh-message { border-block-start: 1px solid var(--background-modifier-border); }
+.kkh-message h3 { color: var(--text-normal); font-size: var(--font-ui-medium); margin: 0 0 var(--size-4-2, 8px); font-weight: 600; }
+.kkh-role-user { background: var(--background-secondary); padding-inline: var(--kkh-gap); border-radius: var(--radius-s); }
+.kkh-markdown { font-size: var(--font-text-size); line-height: 1.6; }
+.kkh-markdown p { margin-block: var(--size-4-2, 8px); }
+.kkh-markdown h1, .kkh-markdown h2, .kkh-markdown h3,
+.kkh-markdown h4, .kkh-markdown h5, .kkh-markdown h6 { color: var(--text-normal); margin-block: var(--kkh-space) var(--size-4-2, 8px); }
+.kkh-chat pre { max-inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--background-secondary); padding: var(--kkh-gap); border-radius: var(--radius-s); }
+.kkh-chat code { font-family: var(--font-monospace); }
+.kkh-table { max-inline-size: 100%; overflow-x: auto; }
+.kkh-table table { border-collapse: collapse; }
+.kkh-table th, .kkh-table td { padding: var(--size-4-2, 8px); border: 1px solid var(--background-modifier-border); }
+.kkh-chat a { color: var(--text-accent); text-decoration: underline; text-underline-offset: 0.15em; }
+.kkh-stream { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.kkh-empty, .kkh-muted, .kkh-tool { color: var(--text-normal); }
+.kkh-requests { flex: 0 1 auto; max-block-size: 36%; overflow-y: auto; padding-inline: var(--kkh-space); }
+.kkh-requests:empty { display: none; }
+.kkh-request { padding-block: var(--kkh-gap); border-block-start: 1px solid var(--background-modifier-border); overflow-wrap: anywhere; }
+.kkh-request h3 { color: var(--text-normal); margin-block: 0 var(--size-4-2, 8px); }
+.kkh-request-actions { position: sticky; inset-block-end: 0; background: var(--background-primary); padding-block: var(--size-4-2, 8px); }
+.kkh-request button { margin-inline-end: var(--size-4-2, 8px); margin-block-end: var(--size-4-2, 8px); }
+.kkh-request label { display: block; margin-block: var(--kkh-gap); }
+.kkh-request textarea, .kkh-request select { display: block; inline-size: 100%; min-block-size: 44px; margin-block-start: var(--size-4-2, 8px); }
+.kkh-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--kkh-gap);
+  align-items: end; padding: var(--kkh-space); padding-block-end: max(var(--kkh-space), env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--background-modifier-border); background: var(--background-primary); }
+.kkh-composer label { display: grid; gap: var(--size-4-2, 8px); font-size: var(--font-ui-small); }
+.kkh-composer textarea { inline-size: 100%; resize: vertical; min-block-size: 72px; max-block-size: 24dvh;
+  font: inherit; font-size: var(--font-text-size); color: var(--text-normal); caret-color: var(--text-accent); }
+.kkh-operations { grid-column: 1 / -1; font-size: var(--font-ui-small); }
+.kkh-operations:empty { display: none; }
+.kkh-operations > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--size-4-2, 8px); }
+.kkh-session-results { display: grid; gap: var(--size-4-2, 8px); max-block-size: 60dvh; overflow-y: auto; }
+.kkh-session-row { block-size: auto; text-align: start; justify-content: start; padding: var(--size-4-3, 12px); white-space: pre-wrap; }
+.is-mobile .kkh-chat { font-size: 17px; }
+.is-mobile.is-floating-nav .kkh-chat {
+  padding-block-end: calc(var(--mobile-toolbar-height, 52px) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
+.is-mobile .kkh-header p, .is-mobile .kkh-composer label { font-size: 15px; }
+.kkh-chat ::selection { background: var(--text-selection); }

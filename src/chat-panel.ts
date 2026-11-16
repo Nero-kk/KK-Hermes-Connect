@@ -1,0 +1,137 @@
+import { renderMarkdown } from "./markdown";
+import { button, requestForm } from "./request-ui";
+import { terminal } from "./errors";
+import type { ChatStore } from "./store";
+
+type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean };
+const phases: Readonly<Record<string, string>> = {
+  preparing: "전송 접수 확인 중", admitted: "접수됨", queued: "대기 중", running: "실행 중",
+  completed: "응답 종료 · 업무 검증은 별도", failed: "실패", cancelled: "중단됨", unknown: "실행 결과 확인 필요", expired: "상세 만료",
+};
+
+export class ChatPanel {
+  private readonly controller = new AbortController();
+  private readonly messages: HTMLElement;
+  private readonly requests: HTMLElement;
+  private readonly status: HTMLElement;
+  private readonly heading: HTMLElement;
+  private readonly source: HTMLElement;
+  private readonly operations: HTMLElement;
+  private readonly input: HTMLTextAreaElement;
+  private readonly send: HTMLButtonElement;
+  private readonly create: HTMLButtonElement;
+  private readonly fork: HTMLButtonElement;
+  private timer: number | undefined;
+  private requestKey = "";
+  private messageKey = "";
+  private composing = false;
+  private readonly listener = (): void => {
+    if (this.timer === undefined) this.timer = window.setTimeout(() => { this.timer = undefined; this.render(); }, 75);
+  };
+  constructor(private readonly root: HTMLElement, readonly store: ChatStore, actions: Actions) {
+    root.replaceChildren(); root.classList.add("kkh-chat");
+    const header = document.createElement("header"); header.className = "kkh-header";
+    this.heading = document.createElement("h2"); this.heading.textContent = "연이 채팅";
+    this.status = document.createElement("p"); this.status.className = "kkh-status";
+    this.status.setAttribute("role", "status"); this.source = document.createElement("p");
+    const toolbar = document.createElement("nav"); toolbar.className = "kkh-toolbar"; toolbar.setAttribute("aria-label", "대화 관리");
+    button(toolbar, "연결", () => { void store.connect(); });
+    button(toolbar, "대화 선택", actions.pick);
+    this.create = button(toolbar, "새 대화", () => this.run(() => store.submit("create")));
+    this.fork = button(toolbar, "분기", () => {
+      if (window.confirm("원본을 보존하고 Hermes native 방식으로 문맥을 승계한 새 대화를 만듭니다. 분기할까요?")) this.run(() => store.submit("fork"));
+    });
+    button(toolbar, "상태 확인", () => this.run(() => store.refresh()));
+    button(toolbar, "설정", actions.settings);
+    header.append(this.heading, this.status, this.source, toolbar);
+    this.messages = document.createElement("section"); this.messages.className = "kkh-messages";
+    this.messages.setAttribute("aria-label", "대화 이력"); this.messages.tabIndex = 0;
+    this.requests = document.createElement("section"); this.requests.className = "kkh-requests";
+    this.requests.setAttribute("aria-label", "승인 및 추가 질문");
+    this.operations = document.createElement("div"); this.operations.className = "kkh-operations";
+    const composer = document.createElement("form"); composer.className = "kkh-composer";
+    const label = document.createElement("label"); label.textContent = "연이에게 메시지";
+    this.input = document.createElement("textarea"); this.input.rows = 3; this.input.value = store.draft;
+    this.input.placeholder = "메시지를 입력하세요"; this.input.setAttribute("aria-label", "연이에게 메시지");
+    label.append(this.input); this.send = document.createElement("button");
+    this.send.type = "submit"; this.send.className = "mod-cta"; this.send.textContent = "전송";
+    composer.append(this.operations, label, this.send);
+    root.append(header, this.messages, this.requests, composer);
+    const options = { signal: this.controller.signal };
+    this.input.addEventListener("input", () => { store.draft = this.input.value; this.send.disabled = !store.draft.trim() || store.busy || store.state !== "ready"; }, options);
+    this.input.addEventListener("compositionstart", () => { this.composing = true; }, options);
+    this.input.addEventListener("compositionend", () => { this.composing = false; }, options);
+    this.input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey && !actions.mobile && !this.composing && !event.isComposing && event.keyCode !== 229) {
+        event.preventDefault(); composer.requestSubmit();
+      }
+    }, options);
+    composer.addEventListener("submit", (event) => {
+      event.preventDefault(); if (this.composing) return;
+      this.run(async () => { await store.submit("send"); this.input.value = store.draft; });
+    }, options);
+    store.listeners.add(this.listener); this.render();
+  }
+  private run(action: () => Promise<void>): void { void action().catch((error: unknown) => { this.requestKey = ""; this.store.report(error); }); }
+  render(): void {
+    const store = this.store; const current = store.current;
+    this.heading.textContent = current?.title ?? "연이 채팅";
+    this.status.textContent = store.status;
+    this.status.dataset["state"] = store.state;
+    this.source.textContent = current ? `${current.source} · ${current.logicalSessionId}${current.source === "slack" ? " · Slack과 같은 대화: 응답이 Slack에도 표시될 수 있음" : current.source === "unknown" ? " · 응답이 원래 연결 채널에도 전달될 수 있음" : ""}` : "기기를 연결한 뒤 기존 대화를 선택하거나 새 대화를 만드세요.";
+    this.send.disabled = store.state !== "ready" || store.busy || !store.draft.trim();
+    this.create.disabled = store.state !== "ready" || store.busy;
+    this.fork.disabled = store.state !== "ready" || store.busy || !current || current.running;
+    this.operations.replaceChildren();
+    const active = store.operations.filter((item) => !terminal(item.phase));
+    const settled = store.operations.findLast((item) => terminal(item.phase));
+    if (!active.length && settled) { const result = document.createElement("p"); result.textContent = phases[settled.phase] ?? settled.phase; this.operations.append(result); }
+    if (store.busy && !active.length) { const pending = document.createElement("p"); pending.textContent = "전송 결과 확인 필요 · 상태 확인으로 서버 영수증을 조회하세요."; this.operations.append(pending); }
+    for (const item of active) {
+      const row = document.createElement("div"); const label = document.createElement("span");
+      label.textContent = `${phases[item.phase] ?? item.phase}${item.result["cancelRequested"] ? " · 중단 요청됨" : ""}`; row.append(label);
+      if (item.result["admission_id"]) button(row, "이 요청 중지", () => this.run(() => store.cancel(item.operationId)));
+      this.operations.append(row);
+    }
+    const requests = current?.requests ?? [];
+    const requestKey = JSON.stringify(requests);
+    if (requestKey !== this.requestKey) {
+      const closed = this.requestKey !== "" && this.requestKey !== "[]" && requests.length === 0;
+      this.requestKey = requestKey; this.requests.replaceChildren();
+      if (closed) { const notice = document.createElement("p"); notice.textContent = "요청 처리됨 · 서버에서 종료를 확인했습니다."; notice.setAttribute("role", "status"); this.requests.append(notice); }
+      for (const card of requests) this.requests.append(requestForm(card, (answer) => this.run(() => store.respond(card, answer))));
+    }
+    const messageKey = JSON.stringify([current?.messages, store.stream, [...store.tools], current?.nextCursor]);
+    if (messageKey === this.messageKey) return;
+    this.messageKey = messageKey;
+    const following = this.messages.scrollHeight - this.messages.scrollTop - this.messages.clientHeight < 80;
+    const oldTop = this.messages.scrollTop; const oldHeight = this.messages.scrollHeight;
+    const oldFirst = this.messages.querySelector("article")?.getAttribute("data-id");
+    this.messages.replaceChildren();
+    if (current?.nextCursor) button(this.messages, "이전 이력 불러오기", () => this.run(() => store.older()));
+    if (!current?.messages.length && !store.stream) {
+      const empty = document.createElement("p"); empty.className = "kkh-empty";
+      empty.textContent = current ? "아직 저장된 메시지가 없습니다." : "회사 연이와 대화를 이어가세요."; this.messages.append(empty);
+    }
+    for (const message of current?.messages ?? []) {
+      const article = document.createElement("article"); article.dataset["id"] = message.id; article.className = `kkh-message kkh-role-${message.role}`;
+      const author = document.createElement("h3"); author.textContent = message.role === "user" ? "나" : message.role === "assistant" ? "연이" : message.name || message.role;
+      const body = document.createElement("div"); body.className = "kkh-markdown"; renderMarkdown(body, message.text);
+      article.append(author, body);
+      if (message.compaction || message.truncated) { const note = document.createElement("p"); note.className = "kkh-muted"; note.textContent = message.truncated ? "서버가 크기 제한으로 축약한 저장 행입니다." : "Hermes가 저장한 압축 문맥입니다."; article.append(note); }
+      this.messages.append(article);
+    }
+    if (store.stream) { const article = document.createElement("article"); article.className = "kkh-message";
+      const label = document.createElement("h3"); label.textContent = "연이 · 응답 중";
+      const body = document.createElement("div"); body.className = "kkh-stream"; body.textContent = store.stream; article.append(label, body); this.messages.append(article); }
+    else if (current?.running) { const waiting = document.createElement("p"); waiting.setAttribute("role", "status"); waiting.textContent = "이 대화에서 실행 중입니다. 실시간 이벤트와 저장 결과를 확인하고 있습니다."; this.messages.append(waiting); }
+    for (const description of store.tools.values()) { const tool = document.createElement("p"); tool.className = "kkh-tool"; tool.textContent = description; this.messages.append(tool); }
+    const newFirst = this.messages.querySelector("article")?.getAttribute("data-id");
+    this.messages.scrollTop = following ? this.messages.scrollHeight : oldFirst !== newFirst ? oldTop + this.messages.scrollHeight - oldHeight : oldTop;
+  }
+  destroy(): void {
+    this.controller.abort(); this.store.listeners.delete(this.listener);
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
+    this.root.replaceChildren();
+  }
+}

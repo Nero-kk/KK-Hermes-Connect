@@ -1,0 +1,623 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KK Hermes Bridge v1 client RPC",
+  "$defs": {
+    "Hello": {
+      "additionalProperties": false,
+      "properties": {
+        "apiVersion": {
+          "const": 1,
+          "title": "Apiversion",
+          "type": "integer"
+        },
+        "clientVersion": {
+          "maxLength": 64,
+          "title": "Clientversion",
+          "type": "string"
+        },
+        "deviceId": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Deviceid",
+          "type": "string"
+        },
+        "profileId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Profileid"
+        }
+      },
+      "required": [
+        "apiVersion",
+        "clientVersion",
+        "deviceId"
+      ],
+      "title": "Hello",
+      "type": "object"
+    },
+    "Ping": {
+      "additionalProperties": false,
+      "properties": {
+        "nonce": {
+          "maxLength": 128,
+          "title": "Nonce",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nonce"
+      ],
+      "title": "Ping",
+      "type": "object"
+    },
+    "ListSessions": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Query",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        }
+      },
+      "title": "ListSessions",
+      "type": "object"
+    },
+    "Operation": {
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Operationid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operationId"
+      ],
+      "title": "Operation",
+      "type": "object"
+    },
+    "Cursor": {
+      "additionalProperties": false,
+      "properties": {
+        "replayEpoch": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Replayepoch",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "replayEpoch",
+        "sequence"
+      ],
+      "title": "Cursor",
+      "type": "object"
+    },
+    "OpenSession": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "logicalSessionId"
+      ],
+      "title": "OpenSession",
+      "type": "object"
+    },
+    "History": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cursor"
+        },
+        "limit": {
+          "default": 100,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "logicalSessionId"
+      ],
+      "title": "History",
+      "type": "object"
+    },
+    "Session": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId"
+      ],
+      "title": "Session",
+      "type": "object"
+    },
+    "Fork": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "operationId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Operationid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "operationId"
+      ],
+      "title": "Fork",
+      "type": "object"
+    },
+    "Send": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "operationId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Operationid",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 65536,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "operationId",
+        "text"
+      ],
+      "title": "Send",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Respond": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "requestId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Requestid",
+          "type": "string"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generation"
+        },
+        "answer": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Answer",
+          "type": "object"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "requestId",
+        "answer"
+      ],
+      "title": "Respond",
+      "type": "object"
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "bridge.hello"
+        },
+        "params": {
+          "$ref": "#/$defs/Hello"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "bridge.ping"
+        },
+        "params": {
+          "$ref": "#/$defs/Ping"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.list"
+        },
+        "params": {
+          "$ref": "#/$defs/ListSessions"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.create"
+        },
+        "params": {
+          "$ref": "#/$defs/Operation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.open"
+        },
+        "params": {
+          "$ref": "#/$defs/OpenSession"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.history"
+        },
+        "params": {
+          "$ref": "#/$defs/History"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.release"
+        },
+        "params": {
+          "$ref": "#/$defs/Session"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.fork"
+        },
+        "params": {
+          "$ref": "#/$defs/Fork"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "messages.send"
+        },
+        "params": {
+          "$ref": "#/$defs/Send"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "operations.get"
+        },
+        "params": {
+          "$ref": "#/$defs/Operation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "operations.cancel"
+        },
+        "params": {
+          "$ref": "#/$defs/Operation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "requests.respond"
+        },
+        "params": {
+          "$ref": "#/$defs/Respond"
+        }
+      }
+    }
+  ]
+}
