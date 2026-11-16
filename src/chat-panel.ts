@@ -3,8 +3,12 @@ import { button, requestForm } from "./request-ui";
 import { terminal } from "./errors";
 import type { ChatStore } from "./store";
 import { ModelPanel } from "./model-panel";
+import { ContextPanel } from "./context-panel";
+import { decodeNoteMessage, noteLabel } from "./note-context";
+import type { NoteAttachment } from "./note-context";
 
-type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean };
+type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean;
+  readonly previewContext: (context: NoteAttachment) => void };
 const phases: Readonly<Record<string, string>> = {
   preparing: "전송 접수 확인 중", admitted: "접수됨", queued: "대기 중", running: "실행 중",
   completed: "응답 종료 · 업무 검증은 별도", failed: "실패", cancelled: "중단됨", unknown: "실행 결과 확인 필요", expired: "상세 만료",
@@ -23,6 +27,7 @@ export class ChatPanel {
   private readonly create: HTMLButtonElement;
   private readonly fork: HTMLButtonElement;
   private readonly models: ModelPanel;
+  private readonly context: ContextPanel;
   private timer: number | undefined;
   private requestKey = "";
   private messageKey = "";
@@ -52,13 +57,14 @@ export class ChatPanel {
     this.requests.setAttribute("aria-label", "승인 및 추가 질문");
     this.operations = document.createElement("div"); this.operations.className = "kkh-operations";
     const composer = document.createElement("form"); composer.className = "kkh-composer";
-    const label = document.createElement("label"); label.textContent = "Message Yeon";
-    this.input = document.createElement("textarea"); this.input.rows = 3; this.input.value = store.draft;
+    const label = document.createElement("label");
+    this.input = document.createElement("textarea"); this.input.rows = 1; this.input.value = store.draft;
     this.input.placeholder = "메시지를 입력하세요"; this.input.setAttribute("aria-label", "Message Yeon");
     label.append(this.input); this.send = document.createElement("button");
     this.send.type = "submit"; this.send.className = "mod-cta"; this.send.textContent = "전송";
     this.models = new ModelPanel(store.models, this.controller.signal);
-    composer.append(this.operations, label, this.send, this.models.element);
+    this.context = new ContextPanel(store.notes, this.controller.signal, actions.previewContext, (error) => store.report(error));
+    composer.append(this.operations, this.context.element, label, this.send, this.models.element);
     root.append(header, this.messages, this.requests, composer);
     const options = { signal: this.controller.signal };
     this.input.addEventListener("input", () => { store.draft = this.input.value; this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready"; }, options);
@@ -81,15 +87,18 @@ export class ChatPanel {
     this.heading.textContent = current?.title ?? "Yeon Chat";
     this.status.textContent = store.status;
     this.status.dataset["state"] = store.state;
-    this.source.textContent = current ? `${current.source} · ${current.logicalSessionId}${current.source === "slack" ? " · Slack과 같은 대화: 응답이 Slack에도 표시될 수 있음" : current.source === "unknown" ? " · 응답이 원래 연결 채널에도 전달될 수 있음" : ""}` : "기기를 연결한 뒤 기존 대화를 선택하거나 새 대화를 만드세요.";
+    this.source.textContent = current?.source === "slack" ? "Slack 연동 대화 · 응답이 Slack에도 표시될 수 있습니다."
+      : current?.source === "unknown" ? "응답이 원래 연결 채널에도 전달될 수 있습니다." : "";
+    this.source.hidden = !this.source.textContent;
     this.send.disabled = store.state !== "ready" || store.busy || store.models.changing || !store.draft.trim();
     this.models.render(store.state !== "ready" || store.busy, current?.running ?? false);
+    this.context.render();
     this.create.disabled = store.state !== "ready" || store.busy || store.models.changing;
     this.fork.disabled = store.state !== "ready" || store.busy || store.models.changing || !current || current.running;
     this.operations.replaceChildren();
     const active = store.operations.filter((item) => !terminal(item.phase));
     const settled = store.operations.findLast((item) => terminal(item.phase));
-    if (!active.length && settled) { const result = document.createElement("p"); result.textContent = phases[settled.phase] ?? settled.phase; this.operations.append(result); }
+    if (!active.length && settled && settled.phase !== "completed") { const result = document.createElement("p"); result.textContent = phases[settled.phase] ?? settled.phase; this.operations.append(result); }
     if (store.busy && !active.length) {
       const pending = document.createElement("p");
       pending.textContent = store.state === "ready" || store.state === "recovering"
@@ -119,19 +128,28 @@ export class ChatPanel {
     const oldFirst = this.messages.querySelector("article")?.getAttribute("data-id");
     this.messages.replaceChildren();
     if (current?.nextCursor) button(this.messages, "이전 이력 불러오기", () => this.run(() => store.older()));
-    if (!current?.messages.length && !store.stream) {
+    const visibleMessages = current?.messages.filter((message) => message.text.trim()) ?? [];
+    const hasStream = Boolean(store.stream.trim());
+    if (!visibleMessages.length && !hasStream && !current?.running) {
       const empty = document.createElement("p"); empty.className = "kkh-empty";
       empty.textContent = current ? "아직 저장된 메시지가 없습니다." : "Chat with Yeon"; this.messages.append(empty);
     }
-    for (const message of current?.messages ?? []) {
+    for (const message of visibleMessages) {
       const article = document.createElement("article"); article.dataset["id"] = message.id; article.className = `kkh-message kkh-role-${message.role}`;
       const author = document.createElement("h3"); author.textContent = message.role === "user" ? "나" : message.role === "assistant" ? "연이" : message.name || message.role;
-      const body = document.createElement("div"); body.className = "kkh-markdown"; renderMarkdown(body, message.text);
+      const attached = message.role === "user" ? decodeNoteMessage(message.text) : null;
+      const body = document.createElement("div"); body.className = "kkh-markdown"; renderMarkdown(body, attached?.request ?? message.text);
       article.append(author, body);
+      if (attached) {
+        const details = document.createElement("details"); details.className = "kkh-context-history";
+        const summary = document.createElement("summary"); summary.textContent = `참조: ${noteLabel(attached.context)}`;
+        const text = document.createElement("pre"); text.textContent = attached.context.text;
+        details.append(summary, text); article.append(details);
+      }
       if (message.compaction || message.truncated) { const note = document.createElement("p"); note.className = "kkh-muted"; note.textContent = message.truncated ? "서버가 크기 제한으로 축약한 저장 행입니다." : "Hermes가 저장한 압축 문맥입니다."; article.append(note); }
       this.messages.append(article);
     }
-    if (store.stream) { const article = document.createElement("article"); article.className = "kkh-message";
+    if (hasStream) { const article = document.createElement("article"); article.className = "kkh-message";
       const label = document.createElement("h3"); label.textContent = "연이 · 응답 중";
       const body = document.createElement("div"); body.className = "kkh-stream"; body.textContent = store.stream; article.append(label, body); this.messages.append(article); }
     else if (current?.running) { const waiting = document.createElement("p"); waiting.setAttribute("role", "status"); waiting.textContent = "이 대화에서 실행 중입니다. 실시간 이벤트와 저장 결과를 확인하고 있습니다."; this.messages.append(waiting); }

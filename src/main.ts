@@ -11,6 +11,9 @@ import { SessionPicker } from "./session-picker";
 import { HermesSettings } from "./settings";
 import { errorText } from "./errors";
 import { parseEnvironment, planEnvironmentImport } from "./environment";
+import { ObsidianNoteTracker } from "./obsidian-note-tracker";
+import { noteLabel } from "./note-context";
+import type { NoteAttachment } from "./note-context";
 
 const VIEW = "kk-hermes-chat";
 
@@ -25,6 +28,7 @@ class HermesView extends ItemView {
       mobile: Platform.isMobile,
       pick: () => new SessionPicker(this.app, this.owner.store).open(),
       settings: () => this.owner.openSettings(),
+      previewContext: (context) => this.owner.previewContext(context),
     });
   }
   override async onClose(): Promise<void> { this.panel?.destroy(); this.panel = null; }
@@ -42,10 +46,14 @@ export default class HermesPlugin extends Plugin {
     this.settings = parsed.data;
     this.credentials = new Credentials(this.app);
     this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
+    const notes = new ObsidianNoteTracker(this.app, () => this.store.notes, () => this.openChat());
+    this.addChild(notes);
     this.registerView(VIEW, (leaf) => new HermesView(leaf, this));
     this.addSettingTab(new HermesSettings(this.app, this));
     this.addRibbonIcon("messages-square", "Hermes Chat Open", () => { void this.openChat(); });
     this.addCommand({ id: "open-chat", name: "Hermes Chat Open", callback: () => { void this.openChat(); } });
+    this.addCommand({ id: "attach-note", name: "활성 노트·선택 문장을 Yeon Chat에 첨부",
+      editorCallback: (editor, info) => { notes.attach(editor, info); void this.openChat(); } });
     this.addCommand({ id: "connect", name: "회사 연이에 연결", callback: () => { void this.store.connect(); } });
     this.addCommand({ id: "disconnect", name: "회사 연결 해제", callback: () => this.store.disconnect() });
     this.registerDomEvent(document, "visibilitychange", () => {
@@ -96,6 +104,15 @@ export default class HermesPlugin extends Plugin {
     const tab = new HermesSettings(this.app, this);
     tab.containerEl = modal.contentEl;
     tab.display(); modal.open();
+  }
+  previewContext(context: NoteAttachment): void {
+    const modal = new Modal(this.app);
+    modal.titleEl.textContent = "전송할 노트 참조";
+    const source = document.createElement("p"); source.textContent = noteLabel(context);
+    const notice = document.createElement("p"); notice.textContent = "전송을 누르면 이 내용이 질문과 함께 회사 Hermes에 전달되고 대화 이력에 저장됩니다.";
+    const text = document.createElement("textarea"); text.readOnly = true; text.value = context.text;
+    text.className = "kkh-context-preview"; text.setAttribute("aria-label", "첨부할 노트 내용");
+    modal.contentEl.append(source, notice, text); modal.open();
   }
   override onunload(): void {
     this.store.disconnect();

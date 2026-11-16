@@ -5,10 +5,12 @@ import type { Message, NativeEvent, Operation, Pending, RequestCard, Settings, S
 import type { Credentials } from "./credentials";
 import { Transport } from "./transport";
 import { ModelStore } from "./model-store";
+import { composeNoteMessage, NoteContextStore } from "./note-context";
 
 export class ChatStore {
   readonly transport = new Transport();
   readonly models = new ModelStore(this.transport, () => this.emit());
+  readonly notes = new NoteContextStore(() => this.emit());
   readonly listeners = new Set<() => void>();
   state: "offline" | "connecting" | "recovering" | "ready" | "blocked" = "offline";
   status = "연결 설정에서 이 기기를 등록하세요.";
@@ -45,7 +47,7 @@ export class ChatStore {
       if (!token) throw new BridgeError("authentication_required");
       await this.transport.connect(this.settings.endpoint, token);
       const identity = hello.parse(await this.transport.rpc("bridge.hello", {
-        apiVersion: 1, clientVersion: "0.3.0", deviceId: this.credentials.deviceId,
+        apiVersion: 1, clientVersion: "0.4.0", deviceId: this.credentials.deviceId,
       }));
       if (identity.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
       if (this.settings.serverId !== identity.serverId) throw new BridgeError("server_mismatch");
@@ -129,10 +131,12 @@ export class ChatStore {
     const id = operationId.parse(crypto.randomUUID());
     const logicalSessionId = this.current?.logicalSessionId ?? "";
     if (kind !== "create" && !logicalSessionId) return;
-    if (kind === "send" && (!this.draft.trim() || new TextEncoder().encode(this.draft).length > 65536)) throw new BridgeError("payload_too_large");
+    const draft = this.draft;
+    if (kind === "send" && !draft.trim()) return;
+    const text = kind === "send" ? composeNoteMessage(draft, this.notes.snapshot()) : "";
     const saved: Pending = { operationId: id, serverId: this.settings.serverId, profileId: this.settings.profileId, logicalSessionId, kind };
     this.settings.pending = [...this.settings.pending, saved]; await this.save(); this.emit();
-    const params = kind === "send" ? { operationId: id, logicalSessionId, text: this.draft }
+    const params = kind === "send" ? { operationId: id, logicalSessionId, text }
       : kind === "fork" ? { operationId: id, logicalSessionId } : { operationId: id };
     if (kind === "send") this.draft = "";
     try {
@@ -148,7 +152,7 @@ export class ChatStore {
       if (error instanceof Error) {
         this.status = errorText(error);
         if (kind === "send" && error instanceof BridgeError && !["outcome_unknown", "gateway_unavailable"].includes(error.code)) {
-          this.draft = params && "text" in params ? params.text : this.draft;
+          this.draft = draft;
           if (error.code === "endpoint_unreachable") this.settings.pending = this.settings.pending.filter((item) => item.operationId !== id);
           await this.save();
         }

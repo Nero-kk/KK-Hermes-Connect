@@ -3,6 +3,9 @@ export class BridgeError extends Error {
 }
 
 const labels: Readonly<Record<string, string>> = {
+  note_source_changed: "참조 노트가 바뀌었습니다. 전송할 노트를 다시 클릭하세요.",
+  note_selection_changed: "선택한 문장이 편집되어 참조가 만료되었습니다. 문장을 다시 선택하세요.",
+  note_context_too_large: "질문과 노트 참조가 합쳐서 64 KiB를 초과합니다. 필요한 문장만 선택하거나 노트 참조를 꺼 주세요.",
   environment_too_large: "환경 파일은 UTF-8 기준 128 KiB 이하여야 합니다.",
   environment_empty_json: "불러올 JSON 내용이 없습니다. 환경 JSON 파일을 선택하거나 내용을 붙여넣어 주세요.",
   environment_invalid_json: "JSON 형식이 올바르지 않습니다. 기존 설정은 유지됩니다.",

@@ -5,13 +5,15 @@
   --kkh-gap: var(--size-4-3, 12px); --kkh-space: var(--size-4-4, 16px);
 }
 .kkh-chat *, .kkh-session-results * { box-sizing: border-box; min-inline-size: 0; }
-.kkh-header { padding: var(--kkh-space); flex: 0 0 auto; border-block-end: 1px solid var(--background-modifier-border); }
+body:not(.is-mobile) .workspace-leaf-content[data-type="kk-hermes-chat"] > .view-content.kkh-chat { padding-block-end: var(--size-4-4, 16px); }
+.kkh-header { padding: var(--size-4-2, 8px) var(--kkh-space); flex: 0 0 auto; border-block-end: 1px solid var(--background-modifier-border); }
 .kkh-header h2 { color: var(--text-normal); font-size: var(--font-ui-large); margin: 0 0 var(--size-4-2, 8px); overflow-wrap: anywhere; }
 .kkh-header p { margin: var(--size-4-1, 4px) 0; font-size: var(--font-ui-small); overflow-wrap: anywhere; }
 .kkh-status { color: var(--text-normal); }
 .kkh-status[data-state="blocked"] { color: var(--text-error); }
-.kkh-toolbar { display: flex; flex-wrap: wrap; gap: var(--size-4-2, 8px); margin-block-start: var(--kkh-gap); }
+.kkh-toolbar { display: flex; flex-wrap: wrap; gap: var(--size-4-2, 8px); margin-block-start: var(--size-4-2, 8px); }
 .kkh-chat button, .kkh-session-row { min-block-size: 44px; white-space: normal; overflow-wrap: anywhere; }
+.kkh-chat .kkh-toolbar button { min-block-size: 32px; }
 .kkh-chat button:focus-visible, .kkh-chat textarea:focus-visible, .kkh-chat select:focus-visible,
 .kkh-session-row:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
 .kkh-chat button:disabled { opacity: 0.5; cursor: default; }
@@ -42,19 +44,30 @@
 .kkh-request button { margin-inline-end: var(--size-4-2, 8px); margin-block-end: var(--size-4-2, 8px); }
 .kkh-request label { display: block; margin-block: var(--kkh-gap); }
 .kkh-request textarea, .kkh-request select { display: block; inline-size: 100%; min-block-size: 44px; margin-block-start: var(--size-4-2, 8px); }
-.kkh-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--kkh-gap);
-  align-items: end; padding: var(--kkh-space); padding-block-end: max(var(--kkh-space), env(safe-area-inset-bottom));
+.kkh-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--size-4-2, 8px);
+  align-items: start; padding: var(--size-4-2, 8px) var(--kkh-space); padding-block-end: max(var(--size-4-2, 8px), env(safe-area-inset-bottom));
   border-block-start: 1px solid var(--background-modifier-border); background: var(--background-primary); }
 .kkh-composer label { display: grid; gap: var(--size-4-2, 8px); font-size: var(--font-ui-small); }
-.kkh-composer textarea { inline-size: 100%; resize: vertical; min-block-size: 72px; max-block-size: 24dvh;
-  font: inherit; font-size: var(--font-text-size); color: var(--text-normal); caret-color: var(--text-accent); }
+.kkh-composer textarea { inline-size: 100%; resize: vertical; block-size: 24px; min-block-size: 24px; max-block-size: 24dvh;
+  padding-block: 2px; padding-inline: var(--size-4-2, 8px); font: inherit; font-size: var(--font-text-size); line-height: 18px;
+  color: var(--text-normal); caret-color: var(--text-accent); }
+.kkh-composer > button { min-block-size: 24px; block-size: 24px; padding-block: 0; align-self: start; }
 .kkh-operations { grid-column: 1 / -1; font-size: var(--font-ui-small); }
 .kkh-operations:empty { display: none; }
-.kkh-model-controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--kkh-gap); }
-.kkh-model-controls > label { flex: 1 1 120px; }
+.kkh-note-context { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--size-4-2, 8px); font-size: var(--font-ui-smaller, 12px); }
+.kkh-note-context span { flex: 1 1 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); }
+.kkh-chat .kkh-note-context button { min-block-size: 24px; padding-block: 0; font-size: inherit; }
+.kkh-note-context button[aria-pressed="true"] { color: var(--text-on-accent); background: var(--interactive-accent); }
+.kkh-chat .kkh-note-context button[hidden] { display: none; }
+.kkh-context-preview { inline-size: 100%; min-block-size: 40dvh; resize: vertical; font-family: var(--font-monospace); }
+.kkh-context-history { margin-block-start: var(--size-4-2, 8px); font-size: var(--font-ui-small); }
+.kkh-context-history summary { cursor: pointer; overflow-wrap: anywhere; }
+.kkh-context-history pre { max-block-size: 32dvh; overflow-y: auto; }
+.kkh-model-controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--size-4-2, 8px); }
+.kkh-model-controls > label { flex: 1 1 120px; gap: var(--size-4-1, 4px); font-size: var(--font-ui-smaller, 12px); }
 .kkh-model-controls > label:first-child { flex: 2 1 220px; }
-.kkh-model-controls select { inline-size: 100%; min-inline-size: 0; min-block-size: 44px; text-overflow: ellipsis; }
-.kkh-model-status { flex: 1 0 100%; margin: 0; font-size: var(--font-ui-small); overflow-wrap: anywhere; }
+.kkh-model-controls select { inline-size: 100%; min-inline-size: 0; min-block-size: 32px; font-size: var(--font-ui-smaller, 12px); text-overflow: ellipsis; }
+.kkh-model-status { flex: 1 0 100%; margin: 0; font-size: var(--font-ui-smaller, 12px); overflow-wrap: anywhere; }
 .kkh-operations > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--size-4-2, 8px); }
 .kkh-session-results { display: grid; gap: var(--size-4-2, 8px); max-block-size: 60dvh; overflow-y: auto; }
 .kkh-session-row { block-size: auto; text-align: start; justify-content: start; padding: var(--size-4-3, 12px); white-space: pre-wrap; }
@@ -63,6 +76,8 @@
   padding-block-end: calc(var(--mobile-toolbar-height, 52px) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
 }
 .is-mobile .kkh-header p, .is-mobile .kkh-composer label { font-size: 15px; }
+.is-mobile .kkh-chat .kkh-toolbar button, .is-mobile .kkh-composer > button, .is-mobile .kkh-model-controls select { min-block-size: 44px; }
+.is-mobile .kkh-chat .kkh-note-context button { min-block-size: 44px; }
 .kkh-chat ::selection { background: var(--text-selection); }
 .kkh-environment { overflow-wrap: anywhere; }
 .kkh-environment .setting-item { flex-direction: column; align-items: stretch; gap: var(--size-4-2, 8px); }

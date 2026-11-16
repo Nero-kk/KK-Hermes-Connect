@@ -10,12 +10,14 @@ text-muted, text-error, interactive-accent, text-on-accent, background-modifier-
 Inherit font-interface, font-text-size, font-monospace and radius-s/m.
 
 ## 3. Spacing
-Use size-4-1 through size-4-6. All actionable touch targets have a 44px minimum.
+Use size-4-1 through size-4-6. Mobile actionable touch targets retain a 44px minimum. The requested desktop compact toolbar/selects use 32px controls and the one-line send action uses 24px.
 Use logical inline/block dimensions; min-inline-size:0 on shrinking regions.
 
 ## 4. Layout
 Layout: ChatView - fixed header and composer around a long conversation -> Obsidian native workspace leaf; scroll owner: .kkh-messages; anti-patterns: document scrolling, fixed viewport widths, automatic scrolling while reading older messages.
+Layout: Compact chat revision - compact header toolbar, content-only history and one-line composer -> existing native leaf; scroll owner: .kkh-messages; anti-patterns: visible internal session IDs, empty speaker-only rows, persistent success boilerplate, excess bottom padding.
 Layout: Execution selectors - model and reasoning below the message input -> two native selects in a wrapping composer row; scroll owner: .kkh-messages; anti-patterns: sending settings as chat text, hiding an unapplied selection, horizontal overflow from long model names.
+Layout: Note context - compact reference toggle, source label and preview above the input -> wrapping native composer row; scroll owner: .kkh-messages, with a bounded expanded history reference; anti-patterns: hidden attachments, losing a selection on chat focus, reading every note on cursor movement, automatic transmission before Send.
 Layout: SessionPicker - search above session results -> Obsidian native modal; scroll owner: .kkh-session-results; anti-patterns: hidden search limits, truncated IDs without a full accessible label.
 Layout: Settings - native settings rows -> Obsidian PluginSettingTab; scroll owner: Obsidian settings modal; anti-patterns: plugin-owned application shell.
 Layout: Environment profile - editable environment fields and JSON transfer -> Obsidian native modal; scroll owner: .modal-content; anti-patterns: nested fixed-height forms, credential export, silently applying a selected file before validation.
