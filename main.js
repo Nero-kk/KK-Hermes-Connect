@@ -17,15 +17,15 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/main.ts
+// evidence/release-src/src/main.ts
 var main_exports = {};
 __export(main_exports, {
   default: () => HermesPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 
-// src/notices.ts
+// evidence/release-src/src/notices.ts
 var import_obsidian = require("obsidian");
 function notify(message2) {
   return new import_obsidian.Notice(message2);
@@ -19748,7 +19748,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// src/credentials.ts
+// evidence/release-src/src/credentials.ts
 var identity = external_exports.object({ deviceId: external_exports.string(), secretRef: external_exports.string() });
 var Credentials = class {
   constructor(app) {
@@ -19796,7 +19796,7 @@ var Credentials = class {
   }
 };
 
-// src/errors.ts
+// evidence/release-src/src/errors.ts
 var BridgeError = class extends Error {
   constructor(code) {
     super(code);
@@ -19856,7 +19856,7 @@ function terminal(value2) {
   return ["completed", "failed", "cancelled", "expired"].includes(value2);
 }
 
-// src/transport.ts
+// evidence/release-src/src/transport.ts
 var bootstrap = external_exports.object({ apiVersion: external_exports.literal(1), wsUrl: external_exports.string(), ticket: external_exports.string() });
 var paired = external_exports.object({ apiVersion: external_exports.literal(1), deviceId: external_exports.string(), token: external_exports.string(), serverId: external_exports.string(), profileId: external_exports.string() });
 var registrationCode = external_exports.string().trim().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/);
@@ -20028,7 +20028,7 @@ var Transport = class {
   }
 };
 
-// src/environment.ts
+// evidence/release-src/src/environment.ts
 var ENVIRONMENT_LIMIT = 128 * 1024;
 var printable = (input2) => [...input2].every((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127);
 var value = external_exports.string().max(2048).refine(printable);
@@ -20113,7 +20113,7 @@ function privateExportPath(input2) {
   return path;
 }
 
-// src/model-schema.ts
+// evidence/release-src/src/model-schema.ts
 var reasoningEffort = external_exports.enum(["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]);
 var modelValues = external_exports.object({ model: external_exports.string(), provider: external_exports.string(), reasoning: external_exports.string(), reasoningWire: external_exports.string() });
 var modelOption = external_exports.object({
@@ -20125,6 +20125,7 @@ var modelOption = external_exports.object({
   canDisableReasoning: external_exports.boolean()
 });
 var modelState = external_exports.object({
+  usage: external_exports.array(external_exports.object({ provider: external_exports.string(), label: external_exports.string(), usedPercent: external_exports.number().min(0).max(100), resetsAt: external_exports.string().nullable() })).optional(),
   logicalSessionId: external_exports.string().min(1),
   selection: modelValues,
   options: external_exports.array(modelOption).max(5e3),
@@ -20140,7 +20141,7 @@ function modelKey(value2) {
   return JSON.stringify([value2.provider, value2.model]);
 }
 
-// src/schema.ts
+// evidence/release-src/src/schema.ts
 var operationId = external_exports.uuid().brand();
 var sessionId = external_exports.string().min(1).brand();
 var phase = external_exports.enum(["preparing", "admitted", "queued", "running", "completed", "failed", "cancelled", "unknown", "expired"]);
@@ -20240,7 +20241,8 @@ var settingsSchema = external_exports.object({
   environment: environmentDetails.default(() => environmentDetails.parse({})),
   serverId: external_exports.string().default(""),
   lastSession: external_exports.string().default(""),
-  pending: external_exports.array(pending).default([])
+  pending: external_exports.array(pending).default([]),
+  visibleModels: external_exports.array(external_exports.string()).nullable().default(null)
 });
 var eventSchema = external_exports.object({
   logicalSessionId: sessionId,
@@ -20258,7 +20260,7 @@ var eventSchema = external_exports.object({
   result: external_exports.unknown().optional()
 });
 
-// src/model-store.ts
+// evidence/release-src/src/model-store.ts
 var ModelStore = class {
   constructor(transport, emit) {
     this.transport = transport;
@@ -20387,7 +20389,7 @@ var ModelStore = class {
   }
 };
 
-// src/note-context.ts
+// evidence/release-src/src/note-context.ts
 var PREFIX = "[KK_HERMES_OBSIDIAN_CONTEXT_V1]\n";
 var attachment = external_exports.object({
   kind: external_exports.enum(["note", "selection"]),
@@ -20410,6 +20412,10 @@ var NoteContextStore = class {
   }
   toggle() {
     this.enabled = !this.enabled;
+    this.changed();
+  }
+  clearSelection() {
+    if (this.target) this.target = { path: this.target.path, read: this.target.read };
     this.changed();
   }
   snapshot() {
@@ -20451,7 +20457,7 @@ function noteLabel(context) {
   return `${context.path} \xB7 ${context.kind === "note" ? "\uB178\uD2B8 \uC804\uCCB4" : context.startLine === void 0 ? "\uC120\uD0DD \uBB38\uC7A5" : `${context.startLine}\u2013${context.endLine ?? context.startLine}\uD589 \uC120\uD0DD`}`;
 }
 
-// src/store.ts
+// evidence/release-src/src/store.ts
 var ChatStore = class {
   constructor(settings, credentials, save) {
     this.settings = settings;
@@ -21946,7 +21952,7 @@ var Kt = g.parseInline;
 var Xt = b.parse;
 var Jt = x.lex;
 
-// src/markdown.ts
+// evidence/release-src/src/markdown.ts
 function tokens(parent, items) {
   for (const token of items ?? []) {
     switch (token.type) {
@@ -22073,7 +22079,7 @@ function renderMarkdown(parent, content) {
   tokens(parent, x.lex(content, { gfm: true }));
 }
 
-// src/request-ui.ts
+// evidence/release-src/src/request-ui.ts
 function button(parent, label, action) {
   const element = document.createElement("button");
   element.type = "button";
@@ -22179,10 +22185,209 @@ function requestForm(card, send) {
   return form;
 }
 
-// src/model-panel.ts
+// evidence/release-src/src/model-preferences.ts
+function modelName(model) {
+  return model.replace(/^gpt-/i, "GPT-").replace(/-(luna|sol|astra|terra)$/i, (_2, name) => ` ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
+}
+function visibleOptions(options, order, provider = "") {
+  if (order === null) return [...options.filter((item) => item.provider === provider), ...options.filter((item) => item.provider !== provider)].slice(0, 8);
+  const byKey = new Map(options.map((option) => [modelKey(option), option]));
+  return [...new Set(order)].flatMap((key) => {
+    const option = byKey.get(key);
+    return option ? [option] : [];
+  });
+}
+
+// evidence/release-src/src/composer-icons.ts
+var paths = {
+  "file-text": "M14 2H6v20h12V6Z M14 2v5h5 M8 12h8 M8 16h6",
+  x: "m6 6 12 12 M6 18 18 6",
+  "text-select": "M4 3H2v4 M20 3h2v4 M4 21H2v-4 M20 21h2v-4 M7 7h10 M7 12h10 M7 17h6",
+  asterisk: "M12 2v20 M3.3 7l17.4 10 M3.3 17 20.7 7 M7 3.3l10 17.4 M17 3.3 7 20.7",
+  sparkles: "m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z",
+  aperture: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M14 3 8 13 M21 8H9 M19 19 13 8 M10 22l6-11 M3 16h12 M5 5l6 11",
+  bot: "M5 7h14v13H5Z M12 3v4 M9 12v2 M15 12v2 M9 17h6",
+  "chevron-down": "m6 9 6 6 6-6",
+  "arrow-up": "M12 19V5 m-6 6 6-6 6 6",
+  "shield-check": "m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6Z m-4 10 3 3 5-5",
+  "signal": "M3 20v-3 M8 20v-7 M13 20V9 M18 20V5"
+};
+function icon(node2, name) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute("d", paths[name] ?? paths["bot"] ?? "");
+  svg.append(path);
+  node2.replaceChildren(svg);
+}
+function providerIcon(provider) {
+  if (/anthropic|claude/i.test(provider)) return "asterisk";
+  if (/google|gemini/i.test(provider)) return "sparkles";
+  if (/openai|codex/i.test(provider)) return "aperture";
+  return "bot";
+}
+
+// evidence/release-src/src/model-picker.ts
+var ModelPicker = class {
+  constructor(controls, signal) {
+    this.controls = controls;
+    this.trigger.type = "button";
+    this.trigger.className = "kkh-model-trigger";
+    this.trigger.setAttribute("aria-haspopup", "dialog");
+    this.trigger.setAttribute("aria-expanded", "false");
+    this.popup.className = "kkh-model-popup";
+    this.popup.hidden = true;
+    this.popup.setAttribute("role", "dialog");
+    this.popup.setAttribute("aria-label", "\uBAA8\uB378\uACFC \uCD94\uB860 \uAC15\uB3C4 \uC120\uD0DD");
+    this.trigger.addEventListener("click", () => {
+      this.popup.hidden = !this.popup.hidden;
+      this.trigger.setAttribute("aria-expanded", String(!this.popup.hidden));
+      this.provider = this.data?.selection.provider ?? "";
+      this.draw();
+      if (!this.popup.hidden) this.popup.querySelector("button:not(:disabled)")?.focus();
+    }, { signal });
+    document.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Node && !this.popup.contains(event.target) && !this.trigger.contains(event.target)) this.close(false);
+    }, { signal });
+    this.popup.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.close(true);
+      }
+      if (event.key === "Tab") {
+        const buttons = [...this.popup.querySelectorAll("button:not(:disabled)")];
+        const first = buttons[0];
+        const last = buttons.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        }
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    }, { signal });
+  }
+  controls;
+  trigger = document.createElement("button");
+  popup = document.createElement("div");
+  provider = "";
+  data = null;
+  renderKey = "";
+  mount(root) {
+    root.append(this.trigger, this.popup);
+  }
+  close(focus) {
+    this.popup.hidden = true;
+    this.trigger.setAttribute("aria-expanded", "false");
+    if (focus) this.trigger.focus();
+  }
+  render(data) {
+    this.data = data;
+    const { model, effort } = this.controls;
+    this.trigger.disabled = model.disabled;
+    this.trigger.replaceChildren();
+    const glyph = document.createElement("span");
+    icon(glyph, providerIcon(data?.selection.provider ?? ""));
+    const label = document.createElement("span");
+    label.className = "kkh-model-name";
+    label.textContent = data ? modelName(data.selection.model) : "\uBAA8\uB378 \uC120\uD0DD";
+    const level = document.createElement("span");
+    level.className = "kkh-effort-label";
+    level.textContent = ` \xB7 ${effort.selectedOptions[0]?.textContent ?? "\uCD94\uB860"}`;
+    const chevron = document.createElement("span");
+    icon(chevron, "chevron-down");
+    this.trigger.append(glyph, label, level, chevron);
+    this.trigger.title = `${label.textContent}${level.textContent}`;
+    if (model.disabled) this.close(false);
+    const key = JSON.stringify([data?.selection, [...model.options].map((option) => [option.value, option.disabled]), effort.disabled]);
+    if (!this.popup.hidden && key !== this.renderKey) this.draw();
+    this.renderKey = key;
+  }
+  draw() {
+    this.popup.replaceChildren();
+    const { model, effort } = this.controls;
+    const choices = [...model.options];
+    const providers = [...new Set(choices.map((option) => this.data?.options.find((item) => JSON.stringify([item.provider, item.model]) === option.value)?.provider ?? this.data?.selection.provider ?? ""))];
+    if (!providers.includes(this.provider)) this.provider = providers[0] ?? "";
+    const tabs = document.createElement("nav");
+    tabs.className = "kkh-provider-tabs";
+    tabs.setAttribute("aria-label", "\uBAA8\uB378 \uC81C\uACF5\uC790");
+    for (const provider of providers) {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      icon(tab, providerIcon(provider));
+      tab.title = provider;
+      tab.setAttribute("aria-label", provider);
+      tab.setAttribute("aria-pressed", String(provider === this.provider));
+      tab.addEventListener("click", () => {
+        this.provider = provider;
+        this.draw();
+        this.popup.querySelector("button[aria-pressed=true]")?.focus();
+      });
+      tabs.append(tab);
+    }
+    const models = document.createElement("section");
+    models.className = "kkh-picker-models";
+    const heading = document.createElement("div");
+    heading.className = "kkh-picker-heading";
+    heading.textContent = "\uBAA8\uB378";
+    models.append(heading);
+    for (const choice of choices) {
+      const option = this.data?.options.find((item) => JSON.stringify([item.provider, item.model]) === choice.value);
+      if ((option?.provider ?? this.data?.selection.provider) !== this.provider) continue;
+      const row = document.createElement("button");
+      row.type = "button";
+      row.textContent = option ? modelName(option.model) : choice.text;
+      row.disabled = choice.disabled;
+      row.title = choice.text;
+      row.setAttribute("aria-pressed", String(choice.selected));
+      row.addEventListener("click", () => {
+        model.value = choice.value;
+        model.dispatchEvent(new Event("change"));
+        this.close(true);
+      });
+      models.append(row);
+    }
+    const levels = document.createElement("section");
+    levels.className = "kkh-picker-efforts";
+    const title = document.createElement("div");
+    title.className = "kkh-picker-heading";
+    title.textContent = "\uC0AC\uACE0";
+    levels.append(title);
+    for (const choice of effort.options) {
+      const row = document.createElement("button");
+      row.type = "button";
+      const bars = document.createElement("span");
+      icon(bars, "signal");
+      row.append(bars, document.createTextNode(choice.text));
+      row.disabled = effort.disabled || choice.disabled;
+      row.setAttribute("aria-pressed", String(choice.selected));
+      row.addEventListener("click", () => {
+        effort.value = choice.value;
+        effort.dispatchEvent(new Event("change"));
+        this.close(true);
+      });
+      levels.append(row);
+    }
+    this.popup.append(tabs, models, levels);
+  }
+};
+
+// evidence/release-src/src/model-panel.ts
 var ModelPanel = class {
-  constructor(store, signal) {
+  constructor(store, signal, order = () => null) {
     this.store = store;
+    this.order = order;
     this.element = document.createElement("div");
     this.element.className = "kkh-model-controls";
     const modelLabel = document.createElement("label");
@@ -22200,6 +22405,9 @@ var ModelPanel = class {
     this.status.setAttribute("role", "status");
     this.status.setAttribute("aria-live", "polite");
     this.element.append(modelLabel, effortLabel, this.status);
+    modelLabel.hidden = effortLabel.hidden = true;
+    this.picker = new ModelPicker({ model: this.model, effort: this.effort }, signal);
+    this.picker.mount(this.element);
     this.model.addEventListener("change", () => {
       const option = store.data?.options.find((item) => modelKey(item) === this.model.value && item.available);
       if (option) void store.change({ kind: "model", model: option.model, provider: option.provider }, (message2) => window.confirm(message2));
@@ -22210,32 +22418,34 @@ var ModelPanel = class {
     }, { signal });
   }
   store;
+  order;
   element;
   model;
   effort;
   status;
   optionKey = "";
+  picker;
   render(disabled, running) {
     const store = this.store;
     const data = store.data;
     const options = data?.options ?? [];
-    const optionKey = JSON.stringify([options, data?.selection]);
+    const visible = visibleOptions(options, this.order(), data?.selection.provider);
+    const optionKey = JSON.stringify([visible, data?.selection]);
     if (optionKey !== this.optionKey) {
       this.optionKey = optionKey;
       this.model.replaceChildren();
       this.effort.replaceChildren();
-      for (const item of options) {
+      for (const item of visible) {
         const option = document.createElement("option");
         option.value = modelKey(item);
         option.textContent = item.label;
         option.disabled = !item.available;
         this.model.append(option);
       }
-      if (data && !options.some((item) => modelKey(item) === modelKey(data.selection))) {
+      if (data && !visible.some((item) => modelKey(item) === modelKey(data.selection))) {
         const current = document.createElement("option");
         current.value = modelKey(data.selection);
         current.textContent = `${data.selection.provider} \xB7 ${data.selection.model} (\uD604\uC7AC \uBAA8\uB378)`;
-        current.disabled = true;
         this.model.append(current);
       }
       const selected2 = options.find((item) => data && modelKey(item) === modelKey(data.selection));
@@ -22263,49 +22473,113 @@ var ModelPanel = class {
     const wire = data?.selection.reasoningWire;
     this.status.textContent = running ? "\uC751\uB2F5\uC774 \uB05D\uB098\uBA74 \uBAA8\uB378\uACFC \uCD94\uB860 \uAC15\uB3C4\uB97C \uBCC0\uACBD\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4." : `${store.status}${wire && wire !== data?.selection.reasoning ? ` \xB7 \uC2E4\uC81C \uC694\uCCAD \uAC15\uB3C4: ${wire}` : ""}`;
     if (data && !selected?.reasoning && !locked) this.status.textContent += " \xB7 \uC774 \uBAA8\uB378\uC740 \uCD94\uB860 \uAC15\uB3C4 \uC870\uC808\uC744 \uC9C0\uC6D0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+    this.status.hidden = !locked && (store.status === "\uC120\uD0DD\uD558\uBA74 \uC774 \uB300\uD654\uC758 Hermes \uC124\uC815\uC5D0 \uBC14\uB85C \uC801\uC6A9\uB429\uB2C8\uB2E4." || store.status === "Hermes \uC124\uC815\uC5D0 \uC801\uC6A9\uD588\uC2B5\uB2C8\uB2E4.") && (!wire || wire === data?.selection.reasoning) && Boolean(selected?.reasoning);
+    this.picker.render(data);
   }
 };
 
-// src/context-panel.ts
+// evidence/release-src/src/context-panel.ts
 var ContextPanel = class {
   constructor(notes, signal, show, report) {
     this.notes = notes;
     this.element.className = "kkh-note-context";
-    this.toggle.type = this.preview.type = "button";
-    this.toggle.textContent = "\uB178\uD2B8 \uCC38\uC870";
-    this.toggle.title = "\uD65C\uC131 \uB178\uD2B8 \uB610\uB294 \uC120\uD0DD \uBB38\uC7A5\uC744 \uC9C8\uBB38\uACFC \uD568\uAED8 \uC804\uC1A1";
-    this.preview.textContent = "\uBCF4\uAE30";
+    this.selection.className = "kkh-selection";
+    this.toggle.type = this.preview.type = this.clear.type = this.chip.type = "button";
+    icon(this.toggle, "file-text");
+    this.toggle.title = "\uB178\uD2B8 \uCC38\uC870 \uCF1C\uAE30 / \uB044\uAE30";
+    this.toggle.setAttribute("aria-label", this.toggle.title);
     this.preview.setAttribute("aria-label", "\uC804\uC1A1\uD560 \uB178\uD2B8 \uCC38\uC870 \uB0B4\uC6A9 \uBBF8\uB9AC \uBCF4\uAE30");
+    this.clear.setAttribute("aria-label", "\uB178\uD2B8 \uCC38\uC870 \uC81C\uAC70");
+    icon(this.clear, "x");
     this.toggle.addEventListener("click", () => {
       notes.toggle();
     }, { signal });
-    this.preview.addEventListener("click", () => {
+    const preview = () => {
       try {
         const context = notes.snapshot();
         if (context) show(context);
       } catch (error62) {
         report(error62);
       }
+    };
+    this.preview.addEventListener("click", preview, { signal });
+    this.chip.addEventListener("click", preview, { signal });
+    this.clear.addEventListener("click", () => {
+      if (notes.enabled) notes.toggle();
     }, { signal });
-    this.element.append(this.toggle, this.label, this.preview);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.setAttribute("aria-label", "\uC904 \uC120\uD0DD \uD574\uC81C, \uB178\uD2B8 \uC804\uCCB4 \uCC38\uC870");
+    icon(remove, "x");
+    remove.addEventListener("click", () => notes.clearSelection(), { signal });
+    this.preview.append(this.label);
+    this.element.append(this.toggle, this.preview, this.clear);
+    this.selection.append(this.chip, remove);
   }
   notes;
   element = document.createElement("div");
+  selection = document.createElement("div");
   toggle = document.createElement("button");
   label = document.createElement("span");
   preview = document.createElement("button");
+  clear = document.createElement("button");
+  chip = document.createElement("button");
   render() {
     const target = this.notes.target;
     this.toggle.setAttribute("aria-pressed", String(this.notes.enabled));
     const selected = target?.selection;
-    const scope = selected ? selected.startLine === void 0 ? "\uC120\uD0DD \uBB38\uC7A5" : `\uC120\uD0DD ${selected.startLine}\u2013${selected.endLine ?? selected.startLine}\uD589` : "\uB178\uD2B8 \uC804\uCCB4";
-    this.label.textContent = !this.notes.enabled ? "\uCC38\uC870 \uAEBC\uC9D0" : target ? `${scope} \xB7 ${target.path.split("/").at(-1) ?? target.path}` : "\uC606 \uB178\uD2B8\uB97C \uD074\uB9AD\uD558\uAC70\uB098 \uBB38\uC7A5\uC744 \uC120\uD0DD\uD558\uC138\uC694";
+    this.label.textContent = target && this.notes.enabled ? (target.path.split("/").at(-1) ?? target.path).replace(/\.md$/, "") : "\uB178\uD2B8 \uCC38\uC870 \uAEBC\uC9D0";
     this.label.title = target ? noteLabel({ kind: selected ? "selection" : "note", path: target.path, ...selected }) : this.label.textContent;
     this.preview.hidden = !target || !this.notes.enabled;
+    this.clear.hidden = this.preview.hidden;
+    this.selection.hidden = !selected || !this.notes.enabled;
+    const count = selected?.startLine === void 0 ? null : (selected.endLine ?? selected.startLine) - selected.startLine + 1;
+    this.chip.replaceChildren();
+    const glyph = document.createElement("span");
+    icon(glyph, "text-select");
+    this.chip.append(glyph, document.createTextNode(count === null ? "\uC120\uD0DD \uBB38\uC7A5" : `${count}\uC904 \uC120\uD0DD\uB428`));
+    this.chip.title = this.label.title;
   }
 };
 
-// src/chat-panel.ts
+// evidence/release-src/src/usage-panel.ts
+var UsagePanel = class {
+  constructor(store) {
+    this.store = store;
+    this.element.className = "kkh-usage";
+  }
+  store;
+  element = document.createElement("div");
+  render() {
+    this.element.replaceChildren();
+    const data = this.store.data;
+    const glyph = document.createElement("span");
+    icon(glyph, providerIcon(data?.selection.provider ?? ""));
+    this.element.append(glyph);
+    const windows = data?.usage?.filter((item) => item.provider === data.selection.provider) ?? [];
+    if (!windows.length) {
+      this.element.append(document.createTextNode("\uC794\uC5EC\uB7C9 \uC815\uBCF4 \uC5C6\uC74C"));
+      return;
+    }
+    for (const window2 of windows) {
+      const row = document.createElement("span");
+      row.className = "kkh-usage-window";
+      const labels2 = { Session: "5\uC2DC\uAC04", Weekly: "\uC8FC\uAC04" };
+      const left = document.createElement("span");
+      left.textContent = `${labels2[window2.label] ?? window2.label} \uC794\uC5EC ${Math.floor(100 - window2.usedPercent)}%`;
+      const reset = document.createElement("span");
+      reset.className = "kkh-muted";
+      const date5 = window2.resetsAt ? new Date(window2.resetsAt) : null;
+      const minutes = date5 ? Math.max(0, Math.ceil((date5.getTime() - Date.now()) / 6e4)) : NaN;
+      reset.textContent = Number.isFinite(minutes) ? ` \xB7 \uCD08\uAE30\uD654 ${minutes >= 1440 ? `${Math.floor(minutes / 1440)}d ` : ""}${Math.floor(minutes % 1440 / 60)}h ${minutes % 60}m` : " \xB7 \uCD08\uAE30\uD654 \uC815\uBCF4 \uC5C6\uC74C";
+      if (date5 && Number.isFinite(date5.getTime())) row.title = date5.toLocaleString();
+      row.append(left, reset);
+      this.element.append(row);
+    }
+  }
+};
+
+// evidence/release-src/src/chat-panel.ts
 var phases = {
   preparing: "\uC804\uC1A1 \uC811\uC218 \uD655\uC778 \uC911",
   admitted: "\uC811\uC218\uB428",
@@ -22360,20 +22634,41 @@ var ChatPanel = class {
     this.input = document.createElement("textarea");
     this.input.rows = 1;
     this.input.value = store.draft;
-    this.input.placeholder = "\uBA54\uC2DC\uC9C0\uB97C \uC785\uB825\uD558\uC138\uC694";
+    this.input.placeholder = "\uBCC0\uACBD \uC694\uCCAD, \uB178\uD2B8 \uB0B4\uC6A9\uC5D0 \uB300\uD574 \uC9C8\uBB38\uD558\uC138\uC694";
     this.input.setAttribute("aria-label", "Message Yeon");
     label.append(this.input);
     this.send = document.createElement("button");
     this.send.type = "submit";
-    this.send.className = "mod-cta";
-    this.send.textContent = "\uC804\uC1A1";
-    this.models = new ModelPanel(store.models, this.controller.signal);
+    this.send.className = "kkh-send";
+    icon(this.send, "arrow-up");
+    this.send.setAttribute("aria-label", "\uC804\uC1A1");
+    this.send.title = "\uC804\uC1A1";
+    this.models = new ModelPanel(store.models, this.controller.signal, () => store.settings.visibleModels);
     this.context = new ContextPanel(store.notes, this.controller.signal, actions.previewContext, (error62) => store.report(error62));
-    composer.append(this.operations, this.context.element, label, this.send, this.models.element);
+    const box = document.createElement("div");
+    box.className = "kkh-input-box";
+    const footer = document.createElement("div");
+    footer.className = "kkh-composer-footer";
+    const access = document.createElement("span");
+    access.className = "kkh-access";
+    const shield = document.createElement("span");
+    icon(shield, "shield-check");
+    access.append(shield, document.createTextNode("Hermes \uAD8C\uD55C"));
+    access.title = "\uC2E4\uD589 \uAD8C\uD55C\uC740 Hermes \uC11C\uBC84 \uC124\uC815\uC744 \uB530\uB985\uB2C8\uB2E4. \uC2B9\uC778 \uC694\uCCAD\uC740 \uB300\uD654\uC5D0\uC11C \uD655\uC778\uD558\uC138\uC694.";
+    footer.append(this.models.element, access, this.send);
+    box.append(this.context.selection, label, footer);
+    this.usage = new UsagePanel(store.models);
+    composer.append(this.operations, this.context.element, box, this.usage.element);
+    this.usageTimer = window.setInterval(() => {
+      this.usage.render();
+      if (store.state === "ready" && !store.models.loading && !store.models.changing && !store.current?.running) void store.models.load();
+    }, 6e4);
     root.append(header, this.messages, this.requests, composer);
     const options = { signal: this.controller.signal };
     this.input.addEventListener("input", () => {
       store.draft = this.input.value;
+      this.input.style.height = "auto";
+      this.input.style.height = `${Math.min(this.input.scrollHeight, 200)}px`;
       this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready";
     }, options);
     this.input.addEventListener("compositionstart", () => {
@@ -22414,6 +22709,8 @@ var ChatPanel = class {
   fork;
   models;
   context;
+  usage;
+  usageTimer;
   timer;
   requestKey = "";
   messageKey = "";
@@ -22441,6 +22738,7 @@ var ChatPanel = class {
     this.send.disabled = store.state !== "ready" || store.busy || store.models.changing || !store.draft.trim();
     this.models.render(store.state !== "ready" || store.busy, current?.running ?? false);
     this.context.render();
+    this.usage.render();
     this.create.disabled = store.state !== "ready" || store.busy || store.models.changing;
     this.fork.disabled = store.state !== "ready" || store.busy || store.models.changing || !current || current.running;
     this.operations.replaceChildren();
@@ -22552,12 +22850,13 @@ var ChatPanel = class {
   destroy() {
     this.controller.abort();
     this.store.listeners.delete(this.listener);
+    window.clearInterval(this.usageTimer);
     if (this.timer !== void 0) window.clearTimeout(this.timer);
     this.root.replaceChildren();
   }
 };
 
-// src/session-picker.ts
+// evidence/release-src/src/session-picker.ts
 var import_obsidian2 = require("obsidian");
 var SessionPicker = class extends import_obsidian2.Modal {
   constructor(app, store) {
@@ -22613,13 +22912,13 @@ ${item.logicalSessionId}`, () => {
   }
 };
 
-// src/settings.ts
-var import_obsidian4 = require("obsidian");
+// evidence/release-src/src/settings.ts
+var import_obsidian5 = require("obsidian");
 
-// src/environment-modal.ts
+// evidence/release-src/src/environment-modal.ts
 var import_obsidian3 = require("obsidian");
 
-// src/button-action.ts
+// evidence/release-src/src/button-action.ts
 async function runButtonAction(control, action) {
   control.setDisabled(true);
   try {
@@ -22631,7 +22930,7 @@ async function runButtonAction(control, action) {
   }
 }
 
-// src/environment-modal.ts
+// evidence/release-src/src/environment-modal.ts
 var fields = [
   ["tailscaleIp", "Tailscale IP"],
   ["ubuntuUser", "Ubuntu \uACC4\uC815\uBA85"],
@@ -22745,8 +23044,70 @@ var EnvironmentModal = class extends import_obsidian3.Modal {
   }
 };
 
-// src/settings.ts
-var HermesSettings = class extends import_obsidian4.PluginSettingTab {
+// evidence/release-src/src/model-settings.ts
+var import_obsidian4 = require("obsidian");
+function modelSettings(root, owner) {
+  const section = root.createDiv({ cls: "kkh-model-settings" });
+  section.createEl("h3", { text: "\uBAA8\uB378 \uC120\uD0DD\uCC3D" });
+  section.createEl("p", { text: "\uCCB4\uD06C\uD55C \uBAA8\uB378\uB9CC \uC120\uD0DD\uCC3D\uC5D0 \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uC704\xB7\uC544\uB798 \uBC84\uD2BC\uC73C\uB85C \uC21C\uC11C\uB97C \uBC14\uAFB8\uC138\uC694. \uAE30\uBCF8\uAC12\uC740 \uCC98\uC74C 8\uAC1C\uC785\uB2C8\uB2E4. \uD604\uC7AC \uC0AC\uC6A9 \uC911\uC778 \uBAA8\uB378\uC740 \uD56D\uC0C1 \uD45C\uC2DC\uB429\uB2C8\uB2E4." });
+  const options = owner.store.models.data?.options ?? [];
+  if (!options.length) {
+    section.createEl("p", { text: "\uB300\uD654\uC5D0 \uC5F0\uACB0\uD55C \uB4A4 \uC124\uC815\uC744 \uB2E4\uC2DC \uC5F4\uBA74 \uBAA8\uB378 \uBAA9\uB85D\uC774 \uD45C\uC2DC\uB429\uB2C8\uB2E4." });
+    return;
+  }
+  const defaults = visibleOptions(options, null, owner.store.models.data?.selection.provider).map(modelKey);
+  let order = [...owner.settings.visibleModels ?? defaults];
+  const list = section.createDiv({ cls: "kkh-model-list" });
+  const save = () => {
+    owner.settings.visibleModels = [...order];
+    owner.store.emit();
+    void owner.saveSettings().catch((error62) => notify(errorText(error62)));
+  };
+  let query = "";
+  const render = () => {
+    list.replaceChildren();
+    const ranked = [...options].sort((a, b2) => {
+      const ai = order.indexOf(modelKey(a));
+      const bi = order.indexOf(modelKey(b2));
+      return (ai < 0 ? Infinity : ai) - (bi < 0 ? Infinity : bi);
+    });
+    for (const option of ranked.filter((item) => item.label.toLowerCase().includes(query))) {
+      const key = modelKey(option);
+      const index = order.indexOf(key);
+      new import_obsidian4.Setting(list).setName(option.label).setDesc(option.available ? option.provider : "\uD604\uC7AC \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC74C").addToggle((toggle) => toggle.setValue(index >= 0).onChange((value2) => {
+        order = value2 ? [...order, key] : order.filter((item) => item !== key);
+        save();
+        render();
+      })).addButton((button2) => button2.setIcon("arrow-up").setTooltip("\uC704\uB85C").setDisabled(index <= 0).onClick(() => {
+        const previous = order[index - 1];
+        if (previous === void 0) return;
+        order.splice(index - 1, 2, key, previous);
+        save();
+        render();
+      })).addButton((button2) => button2.setIcon("arrow-down").setTooltip("\uC544\uB798\uB85C").setDisabled(index < 0 || index === order.length - 1).onClick(() => {
+        const next = order[index + 1];
+        if (next === void 0) return;
+        order.splice(index, 2, next, key);
+        save();
+        render();
+      }));
+    }
+  };
+  new import_obsidian4.Setting(section).setName("\uBAA8\uB378 \uAC80\uC0C9").addSearch((search) => search.setPlaceholder("\uBAA8\uB378 \uB610\uB294 \uC81C\uACF5\uC790").onChange((value2) => {
+    query = value2.toLowerCase();
+    render();
+  }));
+  new import_obsidian4.Setting(section).setName("\uD45C\uC2DC \uBAA9\uB85D \uCD08\uAE30\uD654").addButton((button2) => button2.setButtonText("\uAE30\uBCF8 8\uAC1C").onClick(() => {
+    order = [...defaults];
+    save();
+    render();
+  }));
+  section.append(list);
+  render();
+}
+
+// evidence/release-src/src/settings.ts
+var HermesSettings = class extends import_obsidian5.PluginSettingTab {
   constructor(app, owner) {
     super(app, owner);
     this.owner = owner;
@@ -22755,9 +23116,10 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
   display() {
     this.containerEl.empty();
     const owner = this.owner;
+    modelSettings(this.containerEl, owner);
     let code = "";
-    new import_obsidian4.Setting(this.containerEl).setName("\uC811\uC18D \uD658\uACBD \uAC00\uC838\uC624\uAE30 / \uB0B4\uBCF4\uB0B4\uAE30").setDesc("\uD68C\uC0AC \uC8FC\uC18C, Tailscale IP, \uACC4\uC815\xB7\uACBD\uB85C\xB7\uD504\uB85C\uD544\uACFC Slack\xB7\uC138\uC158\xB7\uC791\uC5C5 ID\uB97C JSON\uC73C\uB85C \uAD00\uB9AC\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uD658\uACBD \uC815\uBCF4 \uC5F4\uAE30").onClick(() => new EnvironmentModal(owner, () => this.display()).open()));
-    new import_obsidian4.Setting(this.containerEl).setName("\uD68C\uC0AC \uC5F0\uACB0 \uC8FC\uC18C").setDesc("Tailscale \uB0B4\uBD80 HTTPS origin. \uC8FC\uC18C\uB97C \uBCC0\uACBD\uD558\uBA74 \uC774 \uAE30\uAE30\uC758 \uC778\uC99D\uC744 \uD574\uC81C\uD569\uB2C8\uB2E4.").addText((input2) => input2.setValue(owner.settings.endpoint).setPlaceholder("https://company.example.ts.net").onChange((value2) => {
+    new import_obsidian5.Setting(this.containerEl).setName("\uC811\uC18D \uD658\uACBD \uAC00\uC838\uC624\uAE30 / \uB0B4\uBCF4\uB0B4\uAE30").setDesc("\uD68C\uC0AC \uC8FC\uC18C, Tailscale IP, \uACC4\uC815\xB7\uACBD\uB85C\xB7\uD504\uB85C\uD544\uACFC Slack\xB7\uC138\uC158\xB7\uC791\uC5C5 ID\uB97C JSON\uC73C\uB85C \uAD00\uB9AC\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uD658\uACBD \uC815\uBCF4 \uC5F4\uAE30").onClick(() => new EnvironmentModal(owner, () => this.display()).open()));
+    new import_obsidian5.Setting(this.containerEl).setName("\uD68C\uC0AC \uC5F0\uACB0 \uC8FC\uC18C").setDesc("Tailscale \uB0B4\uBD80 HTTPS origin. \uC8FC\uC18C\uB97C \uBCC0\uACBD\uD558\uBA74 \uC774 \uAE30\uAE30\uC758 \uC778\uC99D\uC744 \uD574\uC81C\uD569\uB2C8\uB2E4.").addText((input2) => input2.setValue(owner.settings.endpoint).setPlaceholder("https://company.example.ts.net").onChange((value2) => {
       owner.store.disconnect();
       owner.credentials.clear();
       owner.settings.serverId = "";
@@ -22765,8 +23127,8 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
       owner.settings.endpoint = value2.trim();
       void owner.saveSettings().catch((error62) => notify(errorText(error62)));
     }));
-    new import_obsidian4.Setting(this.containerEl).setName("Hermes bot Profile").setDesc(owner.settings.profileId);
-    new import_obsidian4.Setting(this.containerEl).setName("\uAE30\uAE30 \uC774\uB984").setDesc("\uBCC0\uACBD\uD55C \uC774\uB984\uC744 \uC800\uC7A5\uD558\uBA70, \uAE30\uAE30 \uB4F1\uB85D \uC2DC \uC774 \uC774\uB984\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.").addText((input2) => {
+    new import_obsidian5.Setting(this.containerEl).setName("Hermes bot Profile").setDesc(owner.settings.profileId);
+    new import_obsidian5.Setting(this.containerEl).setName("\uAE30\uAE30 \uC774\uB984").setDesc("\uBCC0\uACBD\uD55C \uC774\uB984\uC744 \uC800\uC7A5\uD558\uBA70, \uAE30\uAE30 \uB4F1\uB85D \uC2DC \uC774 \uC774\uB984\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.").addText((input2) => {
       input2.inputEl.maxLength = 100;
       input2.setValue(owner.settings.deviceLabel).onChange((value2) => {
         owner.settings.deviceLabel = value2;
@@ -22775,7 +23137,7 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
         });
       });
     });
-    new import_obsidian4.Setting(this.containerEl).setName("1\uD68C \uB4F1\uB85D \uCF54\uB4DC").setDesc("\uD68C\uC0AC WSL\uC5D0\uC11C kk-hermes-bridge pair\uB85C \uC0C8 \uCF54\uB4DC\uB97C \uBC1C\uAE09\uD574 \uC785\uB825\uD558\uC138\uC694. 5\uBD84 \uB3D9\uC548 \uD55C \uBC88\uB9CC \uC4F8 \uC218 \uC788\uC73C\uBA70, \uD658\uACBD JSON\uC5D0\uB294 \uD3EC\uD568\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addText((input2) => {
+    new import_obsidian5.Setting(this.containerEl).setName("1\uD68C \uB4F1\uB85D \uCF54\uB4DC").setDesc("\uD68C\uC0AC WSL\uC5D0\uC11C kk-hermes-bridge pair\uB85C \uC0C8 \uCF54\uB4DC\uB97C \uBC1C\uAE09\uD574 \uC785\uB825\uD558\uC138\uC694. 5\uBD84 \uB3D9\uC548 \uD55C \uBC88\uB9CC \uC4F8 \uC218 \uC788\uC73C\uBA70, \uD658\uACBD JSON\uC5D0\uB294 \uD3EC\uD568\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addText((input2) => {
       input2.inputEl.type = "password";
       input2.inputEl.autocomplete = "off";
       input2.inputEl.maxLength = 128;
@@ -22783,7 +23145,7 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
         code = value2.trim();
       });
     });
-    new import_obsidian4.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30 \uB4F1\uB85D").setDesc(`${owner.credentials.deviceId ? "\uB4F1\uB85D \uC815\uBCF4\uAC00 \uC788\uC2B5\uB2C8\uB2E4. \uC811\uC18D\uD558\uB824\uBA74 \uC5F0\uACB0 \uD14C\uC2A4\uD2B8\uB97C \uB204\uB974\uC138\uC694. \uC7AC\uB4F1\uB85D\uD560 \uB54C\uB9CC \uC0C8 \uCF54\uB4DC\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. " : ""}${owner.credentials.persistent ? "\uC778\uC99D\uAC12\uC740 Obsidian SecretStorage\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC124\uC815 \uD30C\uC77C\uC5D0\uB294 \uC800\uC7A5\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4." : "\uC774 \uC571\uC5D0\uC11C\uB294 \uC778\uC99D\uAC12\uC744 \uBA54\uBAA8\uB9AC\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC571\uC744 \uC885\uB8CC\uD558\uBA74 \uB2E4\uC2DC \uB4F1\uB85D\uD574\uC57C \uD569\uB2C8\uB2E4."}`).addButton((control) => control.setButtonText(owner.credentials.deviceId ? "\uC7AC\uB4F1\uB85D" : "\uB4F1\uB85D").setCta().onClick(() => {
+    new import_obsidian5.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30 \uB4F1\uB85D").setDesc(`${owner.credentials.deviceId ? "\uB4F1\uB85D \uC815\uBCF4\uAC00 \uC788\uC2B5\uB2C8\uB2E4. \uC811\uC18D\uD558\uB824\uBA74 \uC5F0\uACB0 \uD14C\uC2A4\uD2B8\uB97C \uB204\uB974\uC138\uC694. \uC7AC\uB4F1\uB85D\uD560 \uB54C\uB9CC \uC0C8 \uCF54\uB4DC\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. " : ""}${owner.credentials.persistent ? "\uC778\uC99D\uAC12\uC740 Obsidian SecretStorage\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC124\uC815 \uD30C\uC77C\uC5D0\uB294 \uC800\uC7A5\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4." : "\uC774 \uC571\uC5D0\uC11C\uB294 \uC778\uC99D\uAC12\uC744 \uBA54\uBAA8\uB9AC\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC571\uC744 \uC885\uB8CC\uD558\uBA74 \uB2E4\uC2DC \uB4F1\uB85D\uD574\uC57C \uD569\uB2C8\uB2E4."}`).addButton((control) => control.setButtonText(owner.credentials.deviceId ? "\uC7AC\uB4F1\uB85D" : "\uB4F1\uB85D").setCta().onClick(() => {
       void runButtonAction(control, async () => {
         endpoint(owner.settings.endpoint);
         const label = owner.settings.deviceLabel.trim();
@@ -22800,10 +23162,10 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
         await owner.store.connect();
       });
     }));
-    new import_obsidian4.Setting(this.containerEl).setName("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").setDesc("\uC778\uC99D\xB7\uACE0\uC815 \uD504\uB85C\uD544\xB7Gateway \uAE30\uB2A5\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").onClick(() => {
+    new import_obsidian5.Setting(this.containerEl).setName("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").setDesc("\uC778\uC99D\xB7\uACE0\uC815 \uD504\uB85C\uD544\xB7Gateway \uAE30\uB2A5\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").onClick(() => {
       void owner.store.connect().then(() => notify(owner.store.status));
     }));
-    new import_obsidian4.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30\uC758 \uC778\uC99D \uCC38\uC870 \uD574\uC81C").setDesc("\uC11C\uBC84\uC758 \uD1A0\uD070 \uD3D0\uAE30\uB294 \uD68C\uC0AC WSL\uC758 revoke \uBA85\uB839\uC73C\uB85C \uCC98\uB9AC\uD569\uB2C8\uB2E4. \uC9C4\uD589 \uC911\uC778 \uC791\uC5C5\uC744 \uCDE8\uC18C\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uB85C\uCEEC \uC778\uC99D \uD574\uC81C").onClick(() => {
+    new import_obsidian5.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30\uC758 \uC778\uC99D \uCC38\uC870 \uD574\uC81C").setDesc("\uC11C\uBC84\uC758 \uD1A0\uD070 \uD3D0\uAE30\uB294 \uD68C\uC0AC WSL\uC758 revoke \uBA85\uB839\uC73C\uB85C \uCC98\uB9AC\uD569\uB2C8\uB2E4. \uC9C4\uD589 \uC911\uC778 \uC791\uC5C5\uC744 \uCDE8\uC18C\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uB85C\uCEEC \uC778\uC99D \uD574\uC81C").onClick(() => {
       owner.store.disconnect();
       owner.credentials.clear();
       this.display();
@@ -22813,9 +23175,9 @@ var HermesSettings = class extends import_obsidian4.PluginSettingTab {
   }
 };
 
-// src/obsidian-note-tracker.ts
-var import_obsidian5 = require("obsidian");
-var ObsidianNoteTracker = class extends import_obsidian5.Component {
+// evidence/release-src/src/obsidian-note-tracker.ts
+var import_obsidian6 = require("obsidian");
+var ObsidianNoteTracker = class extends import_obsidian6.Component {
   constructor(app, notes, openChat) {
     super();
     this.app = app;
@@ -22841,9 +23203,9 @@ var ObsidianNoteTracker = class extends import_obsidian5.Component {
     this.bind(document);
     this.registerEvent(this.app.workspace.on("window-open", (_workspace, win) => this.bind(win.document)));
     this.app.workspace.onLayoutReady(() => {
-      const active = this.app.workspace.getActiveViewOfType(import_obsidian5.MarkdownView);
+      const active = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
       const visible = this.app.workspace.getLeavesOfType("markdown").filter((leaf) => leaf.view.containerEl.getClientRects().length > 0);
-      const view = active ?? (visible.length === 1 && visible[0]?.view instanceof import_obsidian5.MarkdownView ? visible[0].view : null);
+      const view = active ?? (visible.length === 1 && visible[0]?.view instanceof import_obsidian6.MarkdownView ? visible[0].view : null);
       if (view) this.capture(view);
     });
   }
@@ -22853,11 +23215,11 @@ var ObsidianNoteTracker = class extends import_obsidian5.Component {
     }
   }
   active(leaf) {
-    if (leaf?.view instanceof import_obsidian5.MarkdownView) this.capture(leaf.view);
+    if (leaf?.view instanceof import_obsidian6.MarkdownView) this.capture(leaf.view);
     else if (leaf && leaf.view.getViewType() !== "kk-hermes-chat") this.notes().set(null);
   }
   captureActive(interaction) {
-    const active = this.app.workspace.getActiveViewOfType(import_obsidian5.MarkdownView);
+    const active = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
     if (!active) return;
     if (interaction) {
       const selection = active.containerEl.ownerDocument.getSelection();
@@ -22900,7 +23262,7 @@ var ObsidianNoteTracker = class extends import_obsidian5.Component {
       return;
     }
     const file2 = info.file;
-    const valid = () => info.file === file2 && this.app.vault.getAbstractFileByPath(path) === file2 && (!(info instanceof import_obsidian5.MarkdownView) || info.containerEl.isConnected);
+    const valid = () => info.file === file2 && this.app.vault.getAbstractFileByPath(path) === file2 && (!(info instanceof import_obsidian6.MarkdownView) || info.containerEl.isConnected);
     const text = editor.getSelection();
     const from = editor.getCursor("from");
     const to = editor.getCursor("to");
@@ -22910,16 +23272,16 @@ var ObsidianNoteTracker = class extends import_obsidian5.Component {
     }, ...text.trim() ? { selection: {
       text,
       startLine: from.line + 1,
-      endLine: to.line + 1,
+      endLine: to.ch === 0 && to.line > from.line ? to.line : to.line + 1,
       isCurrent: () => valid() && editor.getRange(from, to) === text
     } } : {} };
     this.notes().set(target);
   }
 };
 
-// src/main.ts
+// evidence/release-src/src/main.ts
 var VIEW = "kk-hermes-chat";
-var HermesView = class extends import_obsidian6.ItemView {
+var HermesView = class extends import_obsidian7.ItemView {
   constructor(leaf, owner) {
     super(leaf);
     this.owner = owner;
@@ -22937,7 +23299,7 @@ var HermesView = class extends import_obsidian6.ItemView {
   }
   async onOpen() {
     this.panel = new ChatPanel(this.contentEl, this.owner.store, {
-      mobile: import_obsidian6.Platform.isMobile,
+      mobile: import_obsidian7.Platform.isMobile,
       pick: () => new SessionPicker(this.app, this.owner.store).open(),
       settings: () => this.owner.openSettings(),
       previewContext: (context) => this.owner.previewContext(context)
@@ -22948,7 +23310,7 @@ var HermesView = class extends import_obsidian6.ItemView {
     this.panel = null;
   }
 };
-var HermesPlugin = class extends import_obsidian6.Plugin {
+var HermesPlugin = class extends import_obsidian7.Plugin {
   settings = settingsSchema.parse({});
   credentials = new Credentials(this.app);
   store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
@@ -23045,15 +23407,15 @@ var HermesPlugin = class extends import_obsidian6.Plugin {
     }
   }
   openSettings() {
-    const modal = new import_obsidian6.Modal(this.app);
-    modal.titleEl.textContent = "KK Hermes Connect \uC5F0\uACB0 \uC124\uC815";
+    const modal = new import_obsidian7.Modal(this.app);
+    modal.titleEl.textContent = "KK Hermes Connect \uC124\uC815";
     const tab = new HermesSettings(this.app, this);
     tab.containerEl = modal.contentEl;
     tab.display();
     modal.open();
   }
   previewContext(context) {
-    const modal = new import_obsidian6.Modal(this.app);
+    const modal = new import_obsidian7.Modal(this.app);
     modal.titleEl.textContent = "\uC804\uC1A1\uD560 \uB178\uD2B8 \uCC38\uC870";
     const source = document.createElement("p");
     source.textContent = noteLabel(context);

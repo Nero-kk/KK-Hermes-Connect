@@ -25,6 +25,10 @@ export class NoteContextStore {
   constructor(private readonly changed: () => void) {}
   set(target: NoteTarget | null): void { this.target = target; this.changed(); }
   toggle(): void { this.enabled = !this.enabled; this.changed(); }
+  clearSelection(): void {
+    if (this.target) this.target = { path: this.target.path, read: this.target.read };
+    this.changed();
+  }
   snapshot(): NoteAttachment | null {
     const target = this.target;
     if (!this.enabled || !target) return null;

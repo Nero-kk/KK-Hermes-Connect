@@ -6,12 +6,14 @@ import { BridgeError, errorText } from "./errors";
 import { endpoint } from "./transport";
 import { EnvironmentModal } from "./environment-modal";
 import { runButtonAction } from "./button-action";
+import { modelSettings } from "./model-settings";
 
 export class HermesSettings extends PluginSettingTab {
   constructor(app: App, private readonly owner: HermesPlugin) { super(app, owner); }
   override display(): void {
     this.containerEl.empty();
     const owner = this.owner;
+    modelSettings(this.containerEl, owner);
     let code = "";
     new Setting(this.containerEl).setName("접속 환경 가져오기 / 내보내기")
       .setDesc("회사 주소, Tailscale IP, 계정·경로·프로필과 Slack·세션·작업 ID를 JSON으로 관리합니다.")

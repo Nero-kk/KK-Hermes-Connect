@@ -34,10 +34,20 @@ class ModelControls:
             )
             selection["reasoning"] = level.get("value")
         options: list[JsonValue] = []
+        usage: list[JsonValue] = []
         for provider in rows(inventory.get("providers", [])):
             if provider.get("authenticated") is False:
                 continue
             slug = text(provider.get("slug"))
+            for window in rows(obj(provider.get("usage") or {}).get("windows", [])):
+                percent = window.get("used_percent")
+                if (
+                    isinstance(percent, (int, float))
+                    and not isinstance(percent, bool)
+                    and 0 <= percent <= 100
+                ):
+                    usage.append({"provider": slug, "label": text(window.get("label")),
+                                  "usedPercent": percent, "resetsAt": window.get("resets_at")})
             capabilities = obj(provider.get("capabilities") or {})
             unavailable = provider.get("unavailable_models") or []
             models = provider.get("models", [])
@@ -60,6 +70,7 @@ class ModelControls:
             "logicalSessionId": session_id,
             "selection": selection,
             "options": options,
+            "usage": usage,
             "revision": integer(raw.get("revision")),
             "generation": integer(raw.get("execution_generation")),
             "running": raw.get("running") is True,

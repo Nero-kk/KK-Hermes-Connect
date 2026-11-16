@@ -100,7 +100,7 @@ export default class HermesPlugin extends Plugin {
   }
   openSettings(): void {
     const modal = new Modal(this.app);
-    modal.titleEl.textContent = "KK Hermes Connect 연결 설정";
+    modal.titleEl.textContent = "KK Hermes Connect 설정";
     const tab = new HermesSettings(this.app, this);
     tab.containerEl = modal.contentEl;
     tab.display(); modal.open();

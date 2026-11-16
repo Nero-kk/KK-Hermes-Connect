@@ -39,6 +39,9 @@ class Authority(Native):
                             "authenticated": True,
                             "models": ["model-a", "model-b"],
                             "api_key": "secret-not-for-client",
+                            "usage": {"windows": [{"label": "Session", "used_percent": 39,
+                                                   "resets_at": "2026-11-17T02:42:00Z",
+                                                   "api_key": "secret-not-for-client"}]},
                             "capabilities": {
                                 name: {"reasoning": self.reasoning}
                                 for name in ["model-a", "model-b"]
@@ -98,6 +101,8 @@ async def test_inventory_projects_only_client_model_fields() -> None:
     assert "secret-not-for-client" not in json.dumps(result)
     assert "private-model" not in json.dumps(result)
     assert len(result["options"]) == 2
+    assert result["usage"] == [{"provider": "configured", "label": "Session", "usedPercent": 39,
+                                "resetsAt": "2026-11-17T02:42:00Z"}]
 
 
 @pytest.mark.anyio

@@ -78,7 +78,7 @@ export class ObsidianNoteTracker extends Component {
     const target: NoteTarget = { path, read: () => {
       if (!valid()) throw new BridgeError("note_source_changed");
       return editor.getValue();
-    }, ...(text.trim() ? { selection: { text, startLine: from.line + 1, endLine: to.line + 1,
+    }, ...(text.trim() ? { selection: { text, startLine: from.line + 1, endLine: to.ch === 0 && to.line > from.line ? to.line : to.line + 1,
       isCurrent: () => valid() && editor.getRange(from, to) === text } } : {}) };
     this.notes().set(target);
   }

@@ -64,6 +64,7 @@ export const settingsSchema = z.object({
   environment: environmentDetails.default(() => environmentDetails.parse({})),
   serverId: z.string().default(""), lastSession: z.string().default(""),
   pending: z.array(pending).default([]),
+  visibleModels: z.array(z.string()).nullable().default(null),
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export const eventSchema = z.object({

@@ -1,5 +1,7 @@
 import { modelKey, reasoningEffort } from "./model-schema";
 import type { ModelStore } from "./model-store";
+import { visibleOptions } from "./model-preferences";
+import { ModelPicker } from "./model-picker";
 
 export class ModelPanel {
   readonly element: HTMLElement;
@@ -7,7 +9,8 @@ export class ModelPanel {
   private readonly effort: HTMLSelectElement;
   private readonly status: HTMLElement;
   private optionKey = "";
-  constructor(private readonly store: ModelStore, signal: AbortSignal) {
+  private readonly picker: ModelPicker;
+  constructor(private readonly store: ModelStore, signal: AbortSignal, private readonly order: () => readonly string[] | null = () => null) {
     this.element = document.createElement("div"); this.element.className = "kkh-model-controls";
     const modelLabel = document.createElement("label"); modelLabel.textContent = "모델";
     const effortLabel = document.createElement("label"); effortLabel.textContent = "추론 강도";
@@ -17,6 +20,8 @@ export class ModelPanel {
     this.status = document.createElement("p"); this.status.className = "kkh-model-status";
     this.status.setAttribute("role", "status"); this.status.setAttribute("aria-live", "polite");
     this.element.append(modelLabel, effortLabel, this.status);
+    modelLabel.hidden = effortLabel.hidden = true;
+    this.picker = new ModelPicker({ model: this.model, effort: this.effort }, signal); this.picker.mount(this.element);
     this.model.addEventListener("change", () => {
       const option = store.data?.options.find((item) => modelKey(item) === this.model.value && item.available);
       if (option) void store.change({ kind: "model", model: option.model, provider: option.provider }, (message) => window.confirm(message));
@@ -29,16 +34,17 @@ export class ModelPanel {
   render(disabled: boolean, running: boolean): void {
     const store = this.store; const data = store.data;
     const options = data?.options ?? [];
-    const optionKey = JSON.stringify([options, data?.selection]);
+    const visible = visibleOptions(options, this.order(), data?.selection.provider);
+    const optionKey = JSON.stringify([visible, data?.selection]);
     if (optionKey !== this.optionKey) {
       this.optionKey = optionKey; this.model.replaceChildren(); this.effort.replaceChildren();
-      for (const item of options) {
+      for (const item of visible) {
         const option = document.createElement("option"); option.value = modelKey(item); option.textContent = item.label;
         option.disabled = !item.available; this.model.append(option);
       }
-      if (data && !options.some((item) => modelKey(item) === modelKey(data.selection))) {
+      if (data && !visible.some((item) => modelKey(item) === modelKey(data.selection))) {
         const current = document.createElement("option"); current.value = modelKey(data.selection);
-        current.textContent = `${data.selection.provider} · ${data.selection.model} (현재 모델)`; current.disabled = true; this.model.append(current);
+        current.textContent = `${data.selection.provider} · ${data.selection.model} (현재 모델)`; this.model.append(current);
       }
       const selected = options.find((item) => data && modelKey(item) === modelKey(data.selection));
       for (const value of reasoningEffort.options) {
@@ -56,5 +62,7 @@ export class ModelPanel {
     this.status.textContent = running ? "응답이 끝나면 모델과 추론 강도를 변경할 수 있습니다."
       : `${store.status}${wire && wire !== data?.selection.reasoning ? ` · 실제 요청 강도: ${wire}` : ""}`;
     if (data && !selected?.reasoning && !locked) this.status.textContent += " · 이 모델은 추론 강도 조절을 지원하지 않습니다.";
+    this.status.hidden = !locked && (store.status === "선택하면 이 대화의 Hermes 설정에 바로 적용됩니다." || store.status === "Hermes 설정에 적용했습니다.") && (!wire || wire === data?.selection.reasoning) && Boolean(selected?.reasoning);
+    this.picker.render(data);
   }
 }

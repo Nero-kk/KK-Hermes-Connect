@@ -6,6 +6,8 @@ import { ModelPanel } from "./model-panel";
 import { ContextPanel } from "./context-panel";
 import { decodeNoteMessage, noteLabel } from "./note-context";
 import type { NoteAttachment } from "./note-context";
+import { UsagePanel } from "./usage-panel";
+import { icon } from "./composer-icons";
 
 type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean;
   readonly previewContext: (context: NoteAttachment) => void };
@@ -28,6 +30,8 @@ export class ChatPanel {
   private readonly fork: HTMLButtonElement;
   private readonly models: ModelPanel;
   private readonly context: ContextPanel;
+  private readonly usage: UsagePanel;
+  private readonly usageTimer: number;
   private timer: number | undefined;
   private requestKey = "";
   private messageKey = "";
@@ -59,15 +63,25 @@ export class ChatPanel {
     const composer = document.createElement("form"); composer.className = "kkh-composer";
     const label = document.createElement("label");
     this.input = document.createElement("textarea"); this.input.rows = 1; this.input.value = store.draft;
-    this.input.placeholder = "메시지를 입력하세요"; this.input.setAttribute("aria-label", "Message Yeon");
+    this.input.placeholder = "변경 요청, 노트 내용에 대해 질문하세요"; this.input.setAttribute("aria-label", "Message Yeon");
     label.append(this.input); this.send = document.createElement("button");
-    this.send.type = "submit"; this.send.className = "mod-cta"; this.send.textContent = "전송";
-    this.models = new ModelPanel(store.models, this.controller.signal);
+    this.send.type = "submit"; this.send.className = "kkh-send"; icon(this.send, "arrow-up"); this.send.setAttribute("aria-label", "전송"); this.send.title = "전송";
+    this.models = new ModelPanel(store.models, this.controller.signal, () => store.settings.visibleModels);
     this.context = new ContextPanel(store.notes, this.controller.signal, actions.previewContext, (error) => store.report(error));
-    composer.append(this.operations, this.context.element, label, this.send, this.models.element);
+    const box = document.createElement("div"); box.className = "kkh-input-box";
+    const footer = document.createElement("div"); footer.className = "kkh-composer-footer";
+    const access = document.createElement("span"); access.className = "kkh-access"; const shield = document.createElement("span"); icon(shield, "shield-check"); access.append(shield, document.createTextNode("Hermes 권한")); access.title = "실행 권한은 Hermes 서버 설정을 따릅니다. 승인 요청은 대화에서 확인하세요.";
+    footer.append(this.models.element, access, this.send);
+    box.append(this.context.selection, label, footer);
+    this.usage = new UsagePanel(store.models);
+    composer.append(this.operations, this.context.element, box, this.usage.element);
+    this.usageTimer = window.setInterval(() => {
+      this.usage.render();
+      if (store.state === "ready" && !store.models.loading && !store.models.changing && !store.current?.running) void store.models.load();
+    }, 60000);
     root.append(header, this.messages, this.requests, composer);
     const options = { signal: this.controller.signal };
-    this.input.addEventListener("input", () => { store.draft = this.input.value; this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready"; }, options);
+    this.input.addEventListener("input", () => { store.draft = this.input.value; this.input.style.height = "auto"; this.input.style.height = `${Math.min(this.input.scrollHeight, 200)}px`; this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready"; }, options);
     this.input.addEventListener("compositionstart", () => { this.composing = true; }, options);
     this.input.addEventListener("compositionend", () => { this.composing = false; }, options);
     this.input.addEventListener("keydown", (event) => {
@@ -93,6 +107,7 @@ export class ChatPanel {
     this.send.disabled = store.state !== "ready" || store.busy || store.models.changing || !store.draft.trim();
     this.models.render(store.state !== "ready" || store.busy, current?.running ?? false);
     this.context.render();
+    this.usage.render();
     this.create.disabled = store.state !== "ready" || store.busy || store.models.changing;
     this.fork.disabled = store.state !== "ready" || store.busy || store.models.changing || !current || current.running;
     this.operations.replaceChildren();
@@ -159,6 +174,7 @@ export class ChatPanel {
   }
   destroy(): void {
     this.controller.abort(); this.store.listeners.delete(this.listener);
+    window.clearInterval(this.usageTimer);
     if (this.timer !== undefined) window.clearTimeout(this.timer);
     this.root.replaceChildren();
   }
