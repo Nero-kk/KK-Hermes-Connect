@@ -14,6 +14,7 @@ import { parseEnvironment, planEnvironmentImport } from "./environment";
 import { ObsidianNoteTracker } from "./obsidian-note-tracker";
 import { noteLabel } from "./note-context";
 import type { NoteAttachment } from "./note-context";
+import { VaultNoteSource } from "./vault-note-source";
 
 const VIEW = "kk-hermes-chat";
 
@@ -29,6 +30,8 @@ class HermesView extends ItemView {
       pick: () => new SessionPicker(this.app, this.owner.store).open(),
       settings: () => this.owner.openSettings(),
       previewContext: (context) => this.owner.previewContext(context),
+      noteSource: new VaultNoteSource(this.app),
+      newTab: () => { void this.app.workspace.getLeaf("tab").setViewState({ type: VIEW, active: true }).catch((error: unknown) => this.owner.store.report(error)); },
     });
   }
   override async onClose(): Promise<void> { this.panel?.destroy(); this.panel = null; }
@@ -60,6 +63,7 @@ export default class HermesPlugin extends Plugin {
       if (document.visibilityState === "visible" && this.credentials.token()) void this.store.connect();
     });
     this.registerDomEvent(window, "online", () => { if (this.credentials.token()) void this.store.connect(); });
+    this.app.workspace.onLayoutReady(() => { if (this.credentials.token()) void this.store.connect(); });
   }
   async saveSettings(): Promise<void> {
     const data: unknown = JSON.parse(JSON.stringify(this.settings));

@@ -65,6 +65,8 @@ export const settingsSchema = z.object({
   serverId: z.string().default(""), lastSession: z.string().default(""),
   pending: z.array(pending).default([]),
   visibleModels: z.array(z.string()).nullable().default(null),
+  desktopFontStep: z.number().int().min(-4).max(4).default(-2),
+  mobileFontStep: z.number().int().min(-4).max(4).default(-2),
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export const eventSchema = z.object({

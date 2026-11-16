@@ -10,6 +10,11 @@ const paths: Readonly<Record<string, string>> = {
   "arrow-up": "M12 19V5 m-6 6 6-6 6 6",
   "shield-check": "m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6Z m-4 10 3 3 5-5",
   "signal": "M3 20v-3 M8 20v-7 M13 20V9 M18 20V5",
+  "square-plus": "M3 3h18v18H3Z M12 7v10 M7 12h10",
+  "square-pen": "M12 3H3v18h18v-9 M9 15l1-5L19 1l4 4-9 9Z",
+  history: "M3 3v6h6 M3 9a9 9 0 1 1 0 6 M12 7v5l3 2",
+  "git-fork": "M6 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M18 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M12 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M6 7v4h12V7 M12 11v6",
+  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 2h6l1 4 4 1 2 5-3 3 1 4-5 3-3-3-4 1-3-5 3-3-1-4 3-1Z",
 };
 export function icon(node: HTMLElement, name: string): void {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");

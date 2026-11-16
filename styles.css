@@ -118,3 +118,68 @@ body:not(.is-mobile) .workspace-leaf-content[data-type="kk-hermes-chat"] > .view
 .kkh-environment input[type="text"], .kkh-environment textarea { inline-size: 100%; }
 .kkh-environment textarea { resize: vertical; }
 .kkh-environment button { min-block-size: 44px; white-space: normal; }
+
+.kkh-chat {
+  --kkh-shift: var(--kkh-desktop-shift, -4px);
+  --kkh-body-size: max(10px, calc(var(--font-text-size, 16px) + var(--kkh-shift)));
+  --kkh-ui-size: max(10px, calc(var(--font-ui-medium, 14px) + var(--kkh-shift)));
+  --kkh-small-size: max(10px, calc(var(--font-ui-small, 13px) + var(--kkh-shift)));
+  font-size: var(--kkh-body-size);
+}
+.kkh-header:not(:has(p:not([hidden]))) { display: none; }
+.kkh-header { padding: 4px 12px; }
+.kkh-header p, .kkh-model-status, .kkh-operations, .kkh-context-history { font-size: var(--kkh-small-size); }
+.kkh-messages { padding: 12px; }
+.kkh-markdown, .kkh-stream, .kkh-empty, .kkh-tool, .kkh-request, .kkh-request textarea, .kkh-request select { font-size: var(--kkh-body-size); }
+.kkh-message h3, .kkh-request h3 { font-size: var(--kkh-ui-size); }
+.kkh-message { padding-block: 8px 12px; }
+.kkh-markdown h1 { font-size: 1.6em; }
+.kkh-markdown h2 { font-size: 1.4em; }
+.kkh-markdown h3 { font-size: 1.2em; }
+.kkh-composer { gap: 4px; padding: 4px 12px max(4px, env(safe-area-inset-bottom)); }
+.kkh-composer .kkh-toolbar { justify-content: flex-end; flex-wrap: nowrap; gap: 4px; margin: 0; }
+.kkh-chat .kkh-toolbar button { display: inline-flex; align-items: center; justify-content: center; min-block-size: 26px; block-size: 26px; inline-size: 26px; padding: 5px; background: transparent; box-shadow: none; color: var(--text-muted); }
+.kkh-chat .kkh-toolbar button:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.kkh-composer svg { inline-size: 14px; block-size: 14px; flex-basis: 14px; }
+.kkh-composer .kkh-note-context, .kkh-composer .kkh-selection button, .kkh-chat .kkh-model-trigger, .kkh-composer .kkh-access, .kkh-composer .kkh-usage { font-size: var(--kkh-small-size); }
+.kkh-composer .kkh-note-context button { font-size: inherit; }
+.kkh-input-box { padding: 8px 10px; border-radius: 12px; }
+.kkh-composer textarea { font-size: var(--kkh-ui-size); min-block-size: 44px; block-size: 44px; padding-block: 6px; }
+.kkh-composer-footer { margin-block-start: 6px; gap: 6px; }
+.kkh-chat .kkh-model-popup button { font-size: var(--kkh-ui-size); min-block-size: 28px; padding: 6px 10px; }
+.kkh-picker-heading { font-size: var(--kkh-small-size); }
+.kkh-model-popup { inset-inline: 12px; grid-template-columns: 36px minmax(0, 1fr) minmax(94px, .4fr); }
+.kkh-picker-models button { overflow-wrap: anywhere; }
+.kkh-usage { position: relative; gap: 6px; }
+.kkh-chat .kkh-usage-toggle { display: inline-flex; justify-content: center; align-items: center; padding: 4px; inline-size: 24px; min-block-size: 24px; block-size: 24px; background: transparent; box-shadow: none; color: var(--text-muted); }
+.kkh-usage-details { display: flex; flex-wrap: wrap; gap: 4px 12px; flex: 1; }
+.kkh-mentions { position: absolute; z-index: 21; inset-inline: 12px; inset-block-end: calc(100% - 26px); max-block-size: min(300px, 40dvh); overflow-y: auto; border: 1px solid var(--background-modifier-border); border-radius: 10px; background: var(--background-primary); padding: 4px; box-shadow: var(--shadow-s); }
+.kkh-mentions[hidden] { display: none; }
+.kkh-mentions p { font-size: var(--kkh-small-size); padding: 8px; }
+.kkh-chat .kkh-mention-option { display: flex; align-items: center; justify-content: flex-start; gap: 8px; inline-size: 100%; min-block-size: 30px; block-size: auto; padding: 6px 8px; background: transparent; box-shadow: none; text-align: start; color: var(--text-normal); font-size: var(--kkh-ui-size); }
+.kkh-mention-option > span:last-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.kkh-chat .kkh-mention-option[aria-selected="true"], .kkh-chat .kkh-mention-option:hover { background: var(--background-modifier-hover); }
+.is-mobile .kkh-chat { --kkh-shift: var(--kkh-mobile-shift, -4px); font-size: var(--kkh-body-size); }
+.is-mobile .kkh-header p, .is-mobile .kkh-composer label { font-size: var(--kkh-small-size); }
+.is-mobile .kkh-chat .kkh-toolbar button, .is-mobile .kkh-chat .kkh-note-context button, .is-mobile .kkh-chat .kkh-selection button, .is-mobile .kkh-chat .kkh-model-trigger, .is-mobile .kkh-chat .kkh-send { min-block-size: 32px; }
+.is-mobile .kkh-chat .kkh-toolbar button { inline-size: 32px; block-size: 32px; }
+.is-mobile .kkh-chat .kkh-model-popup button, .is-mobile .kkh-chat .kkh-mention-option { min-block-size: 36px; }
+.is-mobile .kkh-composer .kkh-access { font-size: var(--kkh-small-size); }
+.is-mobile .kkh-usage-details { display: none; }
+.is-mobile .kkh-usage-toggle[aria-expanded="true"] + .kkh-usage-details { display: flex; flex-direction: column; position: absolute; inset-inline-start: 0; inset-block-end: calc(100% + 4px); inline-size: max-content; max-inline-size: calc(100vw - 32px); padding: 10px; border: 1px solid var(--background-modifier-border); border-radius: 10px; background: var(--background-primary); box-shadow: var(--shadow-s); z-index: 22; white-space: normal; overflow-wrap: anywhere; }
+.kkh-composer-footer { flex-wrap: wrap; }
+.kkh-chat code { font-size: .95em; }
+.kkh-request button { font-size: var(--kkh-ui-size); }
+.kkh-composer textarea, .kkh-composer textarea:focus { border-radius: 0; }
+.kkh-composer textarea:focus-visible { outline: none; }
+.kkh-input-box:has(textarea:focus-visible) { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.kkh-mention-option > span:last-child { display: grid; gap: 2px; }
+.kkh-mention-option > span:last-child > span { white-space: normal; overflow-wrap: anywhere; }
+.kkh-mention-option small { display: block; color: var(--text-muted); font-size: var(--kkh-small-size); overflow: hidden; text-overflow: ellipsis; }
+.kkh-chat { --kkh-secondary: var(--text-muted); }
+.theme-light .kkh-chat { --kkh-secondary: color-mix(in srgb, var(--text-normal) 65%, var(--text-muted)); }
+.kkh-composer .kkh-effort-label, .kkh-composer .kkh-access, .kkh-composer .kkh-usage,
+.kkh-composer .kkh-usage .kkh-muted, .kkh-composer .kkh-picker-heading, .kkh-composer .kkh-mention-option small,
+.kkh-chat .kkh-toolbar button, .kkh-chat .kkh-usage-toggle { color: var(--kkh-secondary); }
+.kkh-composer textarea::placeholder { color: var(--kkh-secondary); }
+.is-mobile .kkh-chat .kkh-usage-toggle { inline-size: 32px; min-block-size: 32px; block-size: 32px; }

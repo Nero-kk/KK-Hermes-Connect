@@ -7,12 +7,14 @@ import { endpoint } from "./transport";
 import { EnvironmentModal } from "./environment-modal";
 import { runButtonAction } from "./button-action";
 import { modelSettings } from "./model-settings";
+import { appearanceSettings } from "./appearance-settings";
 
 export class HermesSettings extends PluginSettingTab {
   constructor(app: App, private readonly owner: HermesPlugin) { super(app, owner); }
   override display(): void {
     this.containerEl.empty();
     const owner = this.owner;
+    appearanceSettings(this.containerEl, owner);
     modelSettings(this.containerEl, owner);
     let code = "";
     new Setting(this.containerEl).setName("접속 환경 가져오기 / 내보내기")

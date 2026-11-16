@@ -24,7 +24,7 @@ export class ContextPanel {
     };
     this.preview.addEventListener("click", preview, { signal });
     this.chip.addEventListener("click", preview, { signal });
-    this.clear.addEventListener("click", () => { if (notes.enabled) notes.toggle(); }, { signal });
+    this.clear.addEventListener("click", () => notes.detach(), { signal });
     const remove = document.createElement("button"); remove.type = "button";
     remove.setAttribute("aria-label", "줄 선택 해제, 노트 전체 참조"); icon(remove, "x");
     remove.addEventListener("click", () => notes.clearSelection(), { signal });

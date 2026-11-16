@@ -47,6 +47,7 @@ export class ObsidianNoteTracker extends Component {
     this.capture(active);
   }
   attach(editor: Editor, info: MarkdownView | MarkdownFileInfo): void {
+    this.notes().pinned = false;
     this.notes().enabled = true;
     this.captureEditor(editor, info);
   }

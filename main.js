@@ -17,15 +17,15 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// evidence/release-src/src/main.ts
+// evidence/release-0.6-src/src/main.ts
 var main_exports = {};
 __export(main_exports, {
   default: () => HermesPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian7 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 
-// evidence/release-src/src/notices.ts
+// evidence/release-0.6-src/src/notices.ts
 var import_obsidian = require("obsidian");
 function notify(message2) {
   return new import_obsidian.Notice(message2);
@@ -19748,7 +19748,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// evidence/release-src/src/credentials.ts
+// evidence/release-0.6-src/src/credentials.ts
 var identity = external_exports.object({ deviceId: external_exports.string(), secretRef: external_exports.string() });
 var Credentials = class {
   constructor(app) {
@@ -19796,7 +19796,7 @@ var Credentials = class {
   }
 };
 
-// evidence/release-src/src/errors.ts
+// evidence/release-0.6-src/src/errors.ts
 var BridgeError = class extends Error {
   constructor(code) {
     super(code);
@@ -19856,7 +19856,7 @@ function terminal(value2) {
   return ["completed", "failed", "cancelled", "expired"].includes(value2);
 }
 
-// evidence/release-src/src/transport.ts
+// evidence/release-0.6-src/src/transport.ts
 var bootstrap = external_exports.object({ apiVersion: external_exports.literal(1), wsUrl: external_exports.string(), ticket: external_exports.string() });
 var paired = external_exports.object({ apiVersion: external_exports.literal(1), deviceId: external_exports.string(), token: external_exports.string(), serverId: external_exports.string(), profileId: external_exports.string() });
 var registrationCode = external_exports.string().trim().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/);
@@ -20028,7 +20028,7 @@ var Transport = class {
   }
 };
 
-// evidence/release-src/src/environment.ts
+// evidence/release-0.6-src/src/environment.ts
 var ENVIRONMENT_LIMIT = 128 * 1024;
 var printable = (input2) => [...input2].every((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127);
 var value = external_exports.string().max(2048).refine(printable);
@@ -20113,7 +20113,7 @@ function privateExportPath(input2) {
   return path;
 }
 
-// evidence/release-src/src/model-schema.ts
+// evidence/release-0.6-src/src/model-schema.ts
 var reasoningEffort = external_exports.enum(["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]);
 var modelValues = external_exports.object({ model: external_exports.string(), provider: external_exports.string(), reasoning: external_exports.string(), reasoningWire: external_exports.string() });
 var modelOption = external_exports.object({
@@ -20141,7 +20141,7 @@ function modelKey(value2) {
   return JSON.stringify([value2.provider, value2.model]);
 }
 
-// evidence/release-src/src/schema.ts
+// evidence/release-0.6-src/src/schema.ts
 var operationId = external_exports.uuid().brand();
 var sessionId = external_exports.string().min(1).brand();
 var phase = external_exports.enum(["preparing", "admitted", "queued", "running", "completed", "failed", "cancelled", "unknown", "expired"]);
@@ -20242,7 +20242,9 @@ var settingsSchema = external_exports.object({
   serverId: external_exports.string().default(""),
   lastSession: external_exports.string().default(""),
   pending: external_exports.array(pending).default([]),
-  visibleModels: external_exports.array(external_exports.string()).nullable().default(null)
+  visibleModels: external_exports.array(external_exports.string()).nullable().default(null),
+  desktopFontStep: external_exports.number().int().min(-4).max(4).default(-2),
+  mobileFontStep: external_exports.number().int().min(-4).max(4).default(-2)
 });
 var eventSchema = external_exports.object({
   logicalSessionId: sessionId,
@@ -20260,7 +20262,7 @@ var eventSchema = external_exports.object({
   result: external_exports.unknown().optional()
 });
 
-// evidence/release-src/src/model-store.ts
+// evidence/release-0.6-src/src/model-store.ts
 var ModelStore = class {
   constructor(transport, emit) {
     this.transport = transport;
@@ -20389,7 +20391,7 @@ var ModelStore = class {
   }
 };
 
-// evidence/release-src/src/note-context.ts
+// evidence/release-0.6-src/src/note-context.ts
 var PREFIX = "[KK_HERMES_OBSIDIAN_CONTEXT_V1]\n";
 var attachment = external_exports.object({
   kind: external_exports.enum(["note", "selection"]),
@@ -20406,8 +20408,22 @@ var NoteContextStore = class {
   changed;
   enabled = true;
   target = null;
+  pinned = false;
   set(target) {
+    if (this.pinned) return;
     this.target = target;
+    this.changed();
+  }
+  pin(target) {
+    this.pinned = true;
+    this.enabled = true;
+    this.target = target;
+    this.changed();
+  }
+  detach() {
+    this.pinned = false;
+    this.enabled = false;
+    this.target = null;
     this.changed();
   }
   toggle() {
@@ -20457,7 +20473,7 @@ function noteLabel(context) {
   return `${context.path} \xB7 ${context.kind === "note" ? "\uB178\uD2B8 \uC804\uCCB4" : context.startLine === void 0 ? "\uC120\uD0DD \uBB38\uC7A5" : `${context.startLine}\u2013${context.endLine ?? context.startLine}\uD589 \uC120\uD0DD`}`;
 }
 
-// evidence/release-src/src/store.ts
+// evidence/release-0.6-src/src/store.ts
 var ChatStore = class {
   constructor(settings, credentials, save) {
     this.settings = settings;
@@ -20511,7 +20527,7 @@ var ChatStore = class {
       await this.transport.connect(this.settings.endpoint, token);
       const identity2 = hello.parse(await this.transport.rpc("bridge.hello", {
         apiVersion: 1,
-        clientVersion: "0.4.0",
+        clientVersion: "0.6.0",
         deviceId: this.credentials.deviceId
       }));
       if (identity2.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
@@ -21952,7 +21968,7 @@ var Kt = g.parseInline;
 var Xt = b.parse;
 var Jt = x.lex;
 
-// evidence/release-src/src/markdown.ts
+// evidence/release-0.6-src/src/markdown.ts
 function tokens(parent, items) {
   for (const token of items ?? []) {
     switch (token.type) {
@@ -22079,7 +22095,7 @@ function renderMarkdown(parent, content) {
   tokens(parent, x.lex(content, { gfm: true }));
 }
 
-// evidence/release-src/src/request-ui.ts
+// evidence/release-0.6-src/src/request-ui.ts
 function button(parent, label, action) {
   const element = document.createElement("button");
   element.type = "button";
@@ -22185,7 +22201,7 @@ function requestForm(card, send) {
   return form;
 }
 
-// evidence/release-src/src/model-preferences.ts
+// evidence/release-0.6-src/src/model-preferences.ts
 function modelName(model) {
   return model.replace(/^gpt-/i, "GPT-").replace(/-(luna|sol|astra|terra)$/i, (_2, name) => ` ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
 }
@@ -22198,7 +22214,7 @@ function visibleOptions(options, order, provider = "") {
   });
 }
 
-// evidence/release-src/src/composer-icons.ts
+// evidence/release-0.6-src/src/composer-icons.ts
 var paths = {
   "file-text": "M14 2H6v20h12V6Z M14 2v5h5 M8 12h8 M8 16h6",
   x: "m6 6 12 12 M6 18 18 6",
@@ -22210,7 +22226,12 @@ var paths = {
   "chevron-down": "m6 9 6 6 6-6",
   "arrow-up": "M12 19V5 m-6 6 6-6 6 6",
   "shield-check": "m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6Z m-4 10 3 3 5-5",
-  "signal": "M3 20v-3 M8 20v-7 M13 20V9 M18 20V5"
+  "signal": "M3 20v-3 M8 20v-7 M13 20V9 M18 20V5",
+  "square-plus": "M3 3h18v18H3Z M12 7v10 M7 12h10",
+  "square-pen": "M12 3H3v18h18v-9 M9 15l1-5L19 1l4 4-9 9Z",
+  history: "M3 3v6h6 M3 9a9 9 0 1 1 0 6 M12 7v5l3 2",
+  "git-fork": "M6 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M18 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M12 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4 M6 7v4h12V7 M12 11v6",
+  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 2h6l1 4 4 1 2 5-3 3 1 4-5 3-3-3-4 1-3-5 3-3-1-4 3-1Z"
 };
 function icon(node2, name) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -22235,7 +22256,7 @@ function providerIcon(provider) {
   return "bot";
 }
 
-// evidence/release-src/src/model-picker.ts
+// evidence/release-0.6-src/src/model-picker.ts
 var ModelPicker = class {
   constructor(controls, signal) {
     this.controls = controls;
@@ -22383,7 +22404,7 @@ var ModelPicker = class {
   }
 };
 
-// evidence/release-src/src/model-panel.ts
+// evidence/release-0.6-src/src/model-panel.ts
 var ModelPanel = class {
   constructor(store, signal, order = () => null) {
     this.store = store;
@@ -22478,7 +22499,7 @@ var ModelPanel = class {
   }
 };
 
-// evidence/release-src/src/context-panel.ts
+// evidence/release-0.6-src/src/context-panel.ts
 var ContextPanel = class {
   constructor(notes, signal, show, report) {
     this.notes = notes;
@@ -22504,9 +22525,7 @@ var ContextPanel = class {
     };
     this.preview.addEventListener("click", preview, { signal });
     this.chip.addEventListener("click", preview, { signal });
-    this.clear.addEventListener("click", () => {
-      if (notes.enabled) notes.toggle();
-    }, { signal });
+    this.clear.addEventListener("click", () => notes.detach(), { signal });
     const remove = document.createElement("button");
     remove.type = "button";
     remove.setAttribute("aria-label", "\uC904 \uC120\uD0DD \uD574\uC81C, \uB178\uD2B8 \uC804\uCCB4 \uCC38\uC870");
@@ -22542,23 +22561,43 @@ var ContextPanel = class {
   }
 };
 
-// evidence/release-src/src/usage-panel.ts
+// evidence/release-0.6-src/src/usage-panel.ts
 var UsagePanel = class {
-  constructor(store) {
+  constructor(store, signal) {
     this.store = store;
     this.element.className = "kkh-usage";
+    this.details.className = "kkh-usage-details";
+    this.details.id = `kkh-usage-${crypto.randomUUID()}`;
+    this.toggle.type = "button";
+    this.toggle.className = "kkh-usage-toggle";
+    this.toggle.setAttribute("aria-label", "\uC794\uC5EC \uC0AC\uC6A9\uB7C9\uACFC \uCD08\uAE30\uD654 \uC2DC\uAC04");
+    this.toggle.title = "\uC794\uC5EC \uC0AC\uC6A9\uB7C9\uACFC \uCD08\uAE30\uD654 \uC2DC\uAC04";
+    this.toggle.setAttribute("aria-controls", this.details.id);
+    this.toggle.setAttribute("aria-expanded", "false");
+    const options = signal ? { signal } : {};
+    this.toggle.addEventListener("click", () => this.toggle.setAttribute("aria-expanded", String(this.toggle.getAttribute("aria-expanded") !== "true")), options);
+    this.element.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        this.toggle.setAttribute("aria-expanded", "false");
+        this.toggle.focus();
+      }
+    }, options);
+    if (signal) document.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Node && !this.element.contains(event.target)) this.toggle.setAttribute("aria-expanded", "false");
+    }, { signal });
+    this.element.append(this.toggle, this.details);
   }
   store;
   element = document.createElement("div");
+  toggle = document.createElement("button");
+  details = document.createElement("div");
   render() {
-    this.element.replaceChildren();
+    this.details.replaceChildren();
     const data = this.store.data;
-    const glyph = document.createElement("span");
-    icon(glyph, providerIcon(data?.selection.provider ?? ""));
-    this.element.append(glyph);
+    icon(this.toggle, providerIcon(data?.selection.provider ?? ""));
     const windows = data?.usage?.filter((item) => item.provider === data.selection.provider) ?? [];
     if (!windows.length) {
-      this.element.append(document.createTextNode("\uC794\uC5EC\uB7C9 \uC815\uBCF4 \uC5C6\uC74C"));
+      this.details.append(document.createTextNode("\uC794\uC5EC\uB7C9 \uC815\uBCF4 \uC5C6\uC74C"));
       return;
     }
     for (const window2 of windows) {
@@ -22574,12 +22613,154 @@ var UsagePanel = class {
       reset.textContent = Number.isFinite(minutes) ? ` \xB7 \uCD08\uAE30\uD654 ${minutes >= 1440 ? `${Math.floor(minutes / 1440)}d ` : ""}${Math.floor(minutes % 1440 / 60)}h ${minutes % 60}m` : " \xB7 \uCD08\uAE30\uD654 \uC815\uBCF4 \uC5C6\uC74C";
       if (date5 && Number.isFinite(date5.getTime())) row.title = date5.toLocaleString();
       row.append(left, reset);
-      this.element.append(row);
+      this.details.append(row);
     }
   }
 };
 
-// evidence/release-src/src/chat-panel.ts
+// evidence/release-0.6-src/src/mention-picker.ts
+var MentionPicker = class {
+  constructor(input2, source, signal) {
+    this.input = input2;
+    this.source = source;
+    this.element.className = "kkh-mentions";
+    this.element.hidden = true;
+    this.element.id = `kkh-mentions-${crypto.randomUUID()}`;
+    this.element.setAttribute("role", "listbox");
+    this.element.setAttribute("aria-label", "\uCC38\uC870 \uB178\uD2B8 \uC120\uD0DD");
+    input2.setAttribute("aria-controls", this.element.id);
+    input2.setAttribute("aria-autocomplete", "list");
+    input2.setAttribute("aria-expanded", "false");
+    input2.addEventListener("input", () => {
+      this.dismissed = "";
+      this.update();
+    }, { signal });
+    input2.addEventListener("click", () => this.update(), { signal });
+    input2.addEventListener("keyup", (event) => {
+      if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) this.update();
+    }, { signal });
+    input2.addEventListener("keydown", (event) => {
+      if (this.element.hidden || event.isComposing || event.keyCode === 229) return;
+      if (event.key === "Tab" && event.shiftKey) {
+        this.close();
+        return;
+      }
+      if (["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (event.key === "Escape") {
+          this.dismissed = input2.value;
+          this.close();
+        } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          this.index = (this.index + (event.key === "ArrowDown" ? 1 : -1) + this.items.length) % Math.max(1, this.items.length);
+          this.draw();
+        } else {
+          const item = this.items[this.index];
+          if (item) void this.choose(item);
+        }
+      }
+    }, { signal });
+    document.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Node && event.target !== input2 && !this.element.contains(event.target)) this.close();
+    }, { signal });
+    signal.addEventListener("abort", () => {
+      this.version++;
+      this.close();
+    }, { once: true });
+  }
+  input;
+  source;
+  element = document.createElement("div");
+  items = [];
+  index = 0;
+  start = 0;
+  version = 0;
+  loading = false;
+  dismissed = "";
+  update() {
+    this.version++;
+    const before = this.input.value.slice(0, this.input.selectionStart);
+    const match = /(?:^|\s)@([^@\n]*)$/.exec(before);
+    if (!match || this.input.value === this.dismissed) {
+      this.close();
+      return;
+    }
+    const raw = match[1] ?? "";
+    const query = raw.toLocaleLowerCase();
+    this.start = before.length - raw.length - 1;
+    this.items = this.source.list().filter((item) => item.path.toLocaleLowerCase().includes(query)).sort((a, b2) => Number(b2.label.toLocaleLowerCase().startsWith(query)) - Number(a.label.toLocaleLowerCase().startsWith(query)) || b2.modified - a.modified || a.path.localeCompare(b2.path)).slice(0, 30);
+    this.index = 0;
+    this.element.hidden = false;
+    this.input.setAttribute("aria-expanded", "true");
+    this.draw();
+  }
+  draw() {
+    this.element.replaceChildren();
+    if (!this.items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "\uC77C\uCE58\uD558\uB294 \uB178\uD2B8\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.";
+      this.element.append(empty);
+      this.input.removeAttribute("aria-activedescendant");
+      return;
+    }
+    for (const [index, item] of this.items.entries()) {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "kkh-mention-option";
+      row.id = `${this.element.id}-${index}`;
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", String(index === this.index));
+      row.tabIndex = -1;
+      row.title = item.path;
+      const glyph = document.createElement("span");
+      icon(glyph, "file-text");
+      const label = document.createElement("span");
+      const name = document.createElement("span");
+      name.textContent = item.label;
+      const folder = document.createElement("small");
+      folder.textContent = item.path;
+      label.append(name, folder);
+      row.append(glyph, label);
+      row.addEventListener("pointerdown", (event) => event.preventDefault());
+      row.addEventListener("click", () => {
+        void this.choose(item);
+      });
+      this.element.append(row);
+      if (index === this.index) this.input.setAttribute("aria-activedescendant", row.id);
+    }
+    this.element.querySelector('[aria-selected="true"]')?.scrollIntoView?.({ block: "nearest" });
+  }
+  async choose(item) {
+    if (this.loading) return;
+    const version2 = this.version;
+    const draft = this.input.value;
+    const end = this.input.selectionStart;
+    this.loading = true;
+    this.element.setAttribute("aria-busy", "true");
+    try {
+      const target = await this.source.load(item.path);
+      if (version2 !== this.version || draft !== this.input.value || end !== this.input.selectionStart) return;
+      this.source.notes.pin(target);
+      this.input.setRangeText("", this.start, end, "end");
+      this.close();
+      this.input.dispatchEvent(new Event("input", { bubbles: true }));
+      this.input.focus();
+    } catch (error62) {
+      if (version2 === this.version) this.source.report(error62);
+    } finally {
+      this.loading = false;
+      this.element.removeAttribute("aria-busy");
+    }
+  }
+  close() {
+    this.version++;
+    this.element.hidden = true;
+    this.input.setAttribute("aria-expanded", "false");
+    this.input.removeAttribute("aria-activedescendant");
+  }
+};
+
+// evidence/release-0.6-src/src/chat-panel.ts
 var phases = {
   preparing: "\uC804\uC1A1 \uC811\uC218 \uD655\uC778 \uC911",
   admitted: "\uC811\uC218\uB428",
@@ -22599,8 +22780,6 @@ var ChatPanel = class {
     root.classList.add("kkh-chat");
     const header = document.createElement("header");
     header.className = "kkh-header";
-    this.heading = document.createElement("h2");
-    this.heading.textContent = "Yeon Chat";
     this.status = document.createElement("p");
     this.status.className = "kkh-status";
     this.status.setAttribute("role", "status");
@@ -22608,17 +22787,22 @@ var ChatPanel = class {
     const toolbar = document.createElement("nav");
     toolbar.className = "kkh-toolbar";
     toolbar.setAttribute("aria-label", "\uB300\uD654 \uAD00\uB9AC");
-    button(toolbar, "\uC5F0\uACB0", () => {
-      void store.connect();
-    });
-    button(toolbar, "\uB300\uD654 \uC120\uD0DD", actions.pick);
-    this.create = button(toolbar, "\uC0C8 \uB300\uD654", () => this.run(() => store.submit("create")));
-    this.fork = button(toolbar, "\uB300\uD654 \uBD84\uAE30", () => {
+    const tool = (title, glyph, action) => {
+      const control = button(toolbar, title, action);
+      icon(control, glyph);
+      control.title = title;
+      control.setAttribute("aria-label", title);
+      return control;
+    };
+    tool("\uD604\uC7AC \uB300\uD654\uB97C \uC0C8 \uD0ED\uC5D0\uC11C \uC5F4\uAE30", "square-plus", actions.newTab);
+    this.create = tool("\uC0C8 \uB300\uD654", "square-pen", () => this.run(() => store.submit("create")));
+    tool("\uB300\uD654 \uC774\uB825", "history", actions.pick);
+    this.fork = tool("\uB300\uD654 \uBD84\uAE30", "git-fork", () => {
       if (window.confirm("\uC6D0\uBCF8\uC744 \uBCF4\uC874\uD558\uACE0 Hermes native \uBC29\uC2DD\uC73C\uB85C \uBB38\uB9E5\uC744 \uC2B9\uACC4\uD55C \uC0C8 \uB300\uD654\uB97C \uB9CC\uB4ED\uB2C8\uB2E4. \uBD84\uAE30\uD560\uAE4C\uC694?")) this.run(() => store.submit("fork"));
     });
     this.fork.title = "\uD604\uC7AC \uB300\uD654\uC758 \uBB38\uB9E5\uC744 \uC774\uC5B4\uBC1B\uC544 \uBCC4\uB3C4\uC758 \uC0C8 \uB300\uD654\uB97C \uB9CC\uB4ED\uB2C8\uB2E4. \uC6D0\uB798 \uB300\uD654\uB294 \uC720\uC9C0\uB429\uB2C8\uB2E4.";
-    button(toolbar, "\uC124\uC815", actions.settings);
-    header.append(this.heading, this.status, this.source, toolbar);
+    tool("\uC124\uC815", "settings", actions.settings);
+    header.append(this.status, this.source);
     this.messages = document.createElement("section");
     this.messages.className = "kkh-messages";
     this.messages.setAttribute("aria-label", "\uB300\uD654 \uC774\uB825");
@@ -22634,8 +22818,9 @@ var ChatPanel = class {
     this.input = document.createElement("textarea");
     this.input.rows = 1;
     this.input.value = store.draft;
-    this.input.placeholder = "\uBCC0\uACBD \uC694\uCCAD, \uB178\uD2B8 \uB0B4\uC6A9\uC5D0 \uB300\uD574 \uC9C8\uBB38\uD558\uC138\uC694";
+    this.input.placeholder = "\uBCC0\uACBD \uC694\uCCAD, @\uB85C \uB178\uD2B8 \uCC38\uC870";
     this.input.setAttribute("aria-label", "Message Yeon");
+    const mentions = new MentionPicker(this.input, { list: () => actions.noteSource.list(), load: (path) => actions.noteSource.load(path), notes: store.notes, report: (error62) => store.report(error62) }, this.controller.signal);
     label.append(this.input);
     this.send = document.createElement("button");
     this.send.type = "submit";
@@ -22657,8 +22842,8 @@ var ChatPanel = class {
     access.title = "\uC2E4\uD589 \uAD8C\uD55C\uC740 Hermes \uC11C\uBC84 \uC124\uC815\uC744 \uB530\uB985\uB2C8\uB2E4. \uC2B9\uC778 \uC694\uCCAD\uC740 \uB300\uD654\uC5D0\uC11C \uD655\uC778\uD558\uC138\uC694.";
     footer.append(this.models.element, access, this.send);
     box.append(this.context.selection, label, footer);
-    this.usage = new UsagePanel(store.models);
-    composer.append(this.operations, this.context.element, box, this.usage.element);
+    this.usage = new UsagePanel(store.models, this.controller.signal);
+    composer.append(this.operations, toolbar, this.context.element, mentions.element, box, this.usage.element);
     this.usageTimer = window.setInterval(() => {
       this.usage.render();
       if (store.state === "ready" && !store.models.loading && !store.models.changing && !store.current?.running) void store.models.load();
@@ -22670,6 +22855,7 @@ var ChatPanel = class {
       this.input.style.height = "auto";
       this.input.style.height = `${Math.min(this.input.scrollHeight, 200)}px`;
       this.send.disabled = !store.draft.trim() || store.busy || store.models.changing || store.state !== "ready";
+      store.emit();
     }, options);
     this.input.addEventListener("compositionstart", () => {
       this.composing = true;
@@ -22700,7 +22886,6 @@ var ChatPanel = class {
   messages;
   requests;
   status;
-  heading;
   source;
   operations;
   input;
@@ -22730,11 +22915,14 @@ var ChatPanel = class {
   render() {
     const store = this.store;
     const current = store.current;
-    this.heading.textContent = current?.title ?? "Yeon Chat";
+    if (this.input.value !== store.draft) this.input.value = store.draft;
+    this.root.style.setProperty("--kkh-desktop-shift", `${store.settings.desktopFontStep * 2}px`);
+    this.root.style.setProperty("--kkh-mobile-shift", `${store.settings.mobileFontStep * 2}px`);
     this.status.textContent = store.status;
     this.status.dataset["state"] = store.state;
     this.source.textContent = current?.source === "slack" ? "Slack \uC5F0\uB3D9 \uB300\uD654 \xB7 \uC751\uB2F5\uC774 Slack\uC5D0\uB3C4 \uD45C\uC2DC\uB420 \uC218 \uC788\uC2B5\uB2C8\uB2E4." : current?.source === "unknown" ? "\uC751\uB2F5\uC774 \uC6D0\uB798 \uC5F0\uACB0 \uCC44\uB110\uC5D0\uB3C4 \uC804\uB2EC\uB420 \uC218 \uC788\uC2B5\uB2C8\uB2E4." : "";
     this.source.hidden = !this.source.textContent;
+    this.status.hidden = store.state === "ready";
     this.send.disabled = store.state !== "ready" || store.busy || store.models.changing || !store.draft.trim();
     this.models.render(store.state !== "ready" || store.busy, current?.running ?? false);
     this.context.render();
@@ -22856,7 +23044,7 @@ var ChatPanel = class {
   }
 };
 
-// evidence/release-src/src/session-picker.ts
+// evidence/release-0.6-src/src/session-picker.ts
 var import_obsidian2 = require("obsidian");
 var SessionPicker = class extends import_obsidian2.Modal {
   constructor(app, store) {
@@ -22912,13 +23100,13 @@ ${item.logicalSessionId}`, () => {
   }
 };
 
-// evidence/release-src/src/settings.ts
-var import_obsidian5 = require("obsidian");
+// evidence/release-0.6-src/src/settings.ts
+var import_obsidian6 = require("obsidian");
 
-// evidence/release-src/src/environment-modal.ts
+// evidence/release-0.6-src/src/environment-modal.ts
 var import_obsidian3 = require("obsidian");
 
-// evidence/release-src/src/button-action.ts
+// evidence/release-0.6-src/src/button-action.ts
 async function runButtonAction(control, action) {
   control.setDisabled(true);
   try {
@@ -22930,7 +23118,7 @@ async function runButtonAction(control, action) {
   }
 }
 
-// evidence/release-src/src/environment-modal.ts
+// evidence/release-0.6-src/src/environment-modal.ts
 var fields = [
   ["tailscaleIp", "Tailscale IP"],
   ["ubuntuUser", "Ubuntu \uACC4\uC815\uBA85"],
@@ -23044,7 +23232,7 @@ var EnvironmentModal = class extends import_obsidian3.Modal {
   }
 };
 
-// evidence/release-src/src/model-settings.ts
+// evidence/release-0.6-src/src/model-settings.ts
 var import_obsidian4 = require("obsidian");
 function modelSettings(root, owner) {
   const section = root.createDiv({ cls: "kkh-model-settings" });
@@ -23106,8 +23294,23 @@ function modelSettings(root, owner) {
   render();
 }
 
-// evidence/release-src/src/settings.ts
-var HermesSettings = class extends import_obsidian5.PluginSettingTab {
+// evidence/release-0.6-src/src/appearance-settings.ts
+var import_obsidian5 = require("obsidian");
+function appearanceSettings(root, owner) {
+  for (const [key, label] of [["desktopFontStep", "PC \uCC44\uD305 \uAE00\uC790 \uD06C\uAE30"], ["mobileFontStep", "\uBAA8\uBC14\uC77C \uCC44\uD305 \uAE00\uC790 \uD06C\uAE30"]]) {
+    new import_obsidian5.Setting(root).setName(label).setDesc("\uAE30\uBCF8 -2\uB2E8\uACC4. \uD55C \uB2E8\uACC4\uB294 2px\uC774\uBA70 \uB300\uD654\xB7\uC785\uB825\uCC3D\xB7\uCC38\uC870\xB7\uBAA8\uB378\xB7\uC0AC\uC6A9\uB7C9\uC5D0 \uD568\uAED8 \uC801\uC6A9\uD569\uB2C8\uB2E4.").addDropdown((control) => {
+      for (let step = -4; step <= 4; step++) control.addOption(String(step), `${step > 0 ? "+" : ""}${step}\uB2E8\uACC4`);
+      control.setValue(String(owner.settings[key])).onChange((value2) => {
+        owner.settings[key] = Number(value2);
+        owner.store.emit();
+        void owner.saveSettings().catch((error62) => notify(errorText(error62)));
+      });
+    });
+  }
+}
+
+// evidence/release-0.6-src/src/settings.ts
+var HermesSettings = class extends import_obsidian6.PluginSettingTab {
   constructor(app, owner) {
     super(app, owner);
     this.owner = owner;
@@ -23116,10 +23319,11 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
   display() {
     this.containerEl.empty();
     const owner = this.owner;
+    appearanceSettings(this.containerEl, owner);
     modelSettings(this.containerEl, owner);
     let code = "";
-    new import_obsidian5.Setting(this.containerEl).setName("\uC811\uC18D \uD658\uACBD \uAC00\uC838\uC624\uAE30 / \uB0B4\uBCF4\uB0B4\uAE30").setDesc("\uD68C\uC0AC \uC8FC\uC18C, Tailscale IP, \uACC4\uC815\xB7\uACBD\uB85C\xB7\uD504\uB85C\uD544\uACFC Slack\xB7\uC138\uC158\xB7\uC791\uC5C5 ID\uB97C JSON\uC73C\uB85C \uAD00\uB9AC\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uD658\uACBD \uC815\uBCF4 \uC5F4\uAE30").onClick(() => new EnvironmentModal(owner, () => this.display()).open()));
-    new import_obsidian5.Setting(this.containerEl).setName("\uD68C\uC0AC \uC5F0\uACB0 \uC8FC\uC18C").setDesc("Tailscale \uB0B4\uBD80 HTTPS origin. \uC8FC\uC18C\uB97C \uBCC0\uACBD\uD558\uBA74 \uC774 \uAE30\uAE30\uC758 \uC778\uC99D\uC744 \uD574\uC81C\uD569\uB2C8\uB2E4.").addText((input2) => input2.setValue(owner.settings.endpoint).setPlaceholder("https://company.example.ts.net").onChange((value2) => {
+    new import_obsidian6.Setting(this.containerEl).setName("\uC811\uC18D \uD658\uACBD \uAC00\uC838\uC624\uAE30 / \uB0B4\uBCF4\uB0B4\uAE30").setDesc("\uD68C\uC0AC \uC8FC\uC18C, Tailscale IP, \uACC4\uC815\xB7\uACBD\uB85C\xB7\uD504\uB85C\uD544\uACFC Slack\xB7\uC138\uC158\xB7\uC791\uC5C5 ID\uB97C JSON\uC73C\uB85C \uAD00\uB9AC\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uD658\uACBD \uC815\uBCF4 \uC5F4\uAE30").onClick(() => new EnvironmentModal(owner, () => this.display()).open()));
+    new import_obsidian6.Setting(this.containerEl).setName("\uD68C\uC0AC \uC5F0\uACB0 \uC8FC\uC18C").setDesc("Tailscale \uB0B4\uBD80 HTTPS origin. \uC8FC\uC18C\uB97C \uBCC0\uACBD\uD558\uBA74 \uC774 \uAE30\uAE30\uC758 \uC778\uC99D\uC744 \uD574\uC81C\uD569\uB2C8\uB2E4.").addText((input2) => input2.setValue(owner.settings.endpoint).setPlaceholder("https://company.example.ts.net").onChange((value2) => {
       owner.store.disconnect();
       owner.credentials.clear();
       owner.settings.serverId = "";
@@ -23127,8 +23331,8 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
       owner.settings.endpoint = value2.trim();
       void owner.saveSettings().catch((error62) => notify(errorText(error62)));
     }));
-    new import_obsidian5.Setting(this.containerEl).setName("Hermes bot Profile").setDesc(owner.settings.profileId);
-    new import_obsidian5.Setting(this.containerEl).setName("\uAE30\uAE30 \uC774\uB984").setDesc("\uBCC0\uACBD\uD55C \uC774\uB984\uC744 \uC800\uC7A5\uD558\uBA70, \uAE30\uAE30 \uB4F1\uB85D \uC2DC \uC774 \uC774\uB984\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.").addText((input2) => {
+    new import_obsidian6.Setting(this.containerEl).setName("Hermes bot Profile").setDesc(owner.settings.profileId);
+    new import_obsidian6.Setting(this.containerEl).setName("\uAE30\uAE30 \uC774\uB984").setDesc("\uBCC0\uACBD\uD55C \uC774\uB984\uC744 \uC800\uC7A5\uD558\uBA70, \uAE30\uAE30 \uB4F1\uB85D \uC2DC \uC774 \uC774\uB984\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.").addText((input2) => {
       input2.inputEl.maxLength = 100;
       input2.setValue(owner.settings.deviceLabel).onChange((value2) => {
         owner.settings.deviceLabel = value2;
@@ -23137,7 +23341,7 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
         });
       });
     });
-    new import_obsidian5.Setting(this.containerEl).setName("1\uD68C \uB4F1\uB85D \uCF54\uB4DC").setDesc("\uD68C\uC0AC WSL\uC5D0\uC11C kk-hermes-bridge pair\uB85C \uC0C8 \uCF54\uB4DC\uB97C \uBC1C\uAE09\uD574 \uC785\uB825\uD558\uC138\uC694. 5\uBD84 \uB3D9\uC548 \uD55C \uBC88\uB9CC \uC4F8 \uC218 \uC788\uC73C\uBA70, \uD658\uACBD JSON\uC5D0\uB294 \uD3EC\uD568\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addText((input2) => {
+    new import_obsidian6.Setting(this.containerEl).setName("1\uD68C \uB4F1\uB85D \uCF54\uB4DC").setDesc("\uD68C\uC0AC WSL\uC5D0\uC11C kk-hermes-bridge pair\uB85C \uC0C8 \uCF54\uB4DC\uB97C \uBC1C\uAE09\uD574 \uC785\uB825\uD558\uC138\uC694. 5\uBD84 \uB3D9\uC548 \uD55C \uBC88\uB9CC \uC4F8 \uC218 \uC788\uC73C\uBA70, \uD658\uACBD JSON\uC5D0\uB294 \uD3EC\uD568\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addText((input2) => {
       input2.inputEl.type = "password";
       input2.inputEl.autocomplete = "off";
       input2.inputEl.maxLength = 128;
@@ -23145,7 +23349,7 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
         code = value2.trim();
       });
     });
-    new import_obsidian5.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30 \uB4F1\uB85D").setDesc(`${owner.credentials.deviceId ? "\uB4F1\uB85D \uC815\uBCF4\uAC00 \uC788\uC2B5\uB2C8\uB2E4. \uC811\uC18D\uD558\uB824\uBA74 \uC5F0\uACB0 \uD14C\uC2A4\uD2B8\uB97C \uB204\uB974\uC138\uC694. \uC7AC\uB4F1\uB85D\uD560 \uB54C\uB9CC \uC0C8 \uCF54\uB4DC\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. " : ""}${owner.credentials.persistent ? "\uC778\uC99D\uAC12\uC740 Obsidian SecretStorage\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC124\uC815 \uD30C\uC77C\uC5D0\uB294 \uC800\uC7A5\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4." : "\uC774 \uC571\uC5D0\uC11C\uB294 \uC778\uC99D\uAC12\uC744 \uBA54\uBAA8\uB9AC\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC571\uC744 \uC885\uB8CC\uD558\uBA74 \uB2E4\uC2DC \uB4F1\uB85D\uD574\uC57C \uD569\uB2C8\uB2E4."}`).addButton((control) => control.setButtonText(owner.credentials.deviceId ? "\uC7AC\uB4F1\uB85D" : "\uB4F1\uB85D").setCta().onClick(() => {
+    new import_obsidian6.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30 \uB4F1\uB85D").setDesc(`${owner.credentials.deviceId ? "\uB4F1\uB85D \uC815\uBCF4\uAC00 \uC788\uC2B5\uB2C8\uB2E4. \uC811\uC18D\uD558\uB824\uBA74 \uC5F0\uACB0 \uD14C\uC2A4\uD2B8\uB97C \uB204\uB974\uC138\uC694. \uC7AC\uB4F1\uB85D\uD560 \uB54C\uB9CC \uC0C8 \uCF54\uB4DC\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. " : ""}${owner.credentials.persistent ? "\uC778\uC99D\uAC12\uC740 Obsidian SecretStorage\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC124\uC815 \uD30C\uC77C\uC5D0\uB294 \uC800\uC7A5\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4." : "\uC774 \uC571\uC5D0\uC11C\uB294 \uC778\uC99D\uAC12\uC744 \uBA54\uBAA8\uB9AC\uC5D0 \uBCF4\uAD00\uD569\uB2C8\uB2E4. \uC571\uC744 \uC885\uB8CC\uD558\uBA74 \uB2E4\uC2DC \uB4F1\uB85D\uD574\uC57C \uD569\uB2C8\uB2E4."}`).addButton((control) => control.setButtonText(owner.credentials.deviceId ? "\uC7AC\uB4F1\uB85D" : "\uB4F1\uB85D").setCta().onClick(() => {
       void runButtonAction(control, async () => {
         endpoint(owner.settings.endpoint);
         const label = owner.settings.deviceLabel.trim();
@@ -23162,10 +23366,10 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
         await owner.store.connect();
       });
     }));
-    new import_obsidian5.Setting(this.containerEl).setName("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").setDesc("\uC778\uC99D\xB7\uACE0\uC815 \uD504\uB85C\uD544\xB7Gateway \uAE30\uB2A5\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").onClick(() => {
+    new import_obsidian6.Setting(this.containerEl).setName("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").setDesc("\uC778\uC99D\xB7\uACE0\uC815 \uD504\uB85C\uD544\xB7Gateway \uAE30\uB2A5\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uC5F0\uACB0 \uD14C\uC2A4\uD2B8").onClick(() => {
       void owner.store.connect().then(() => notify(owner.store.status));
     }));
-    new import_obsidian5.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30\uC758 \uC778\uC99D \uCC38\uC870 \uD574\uC81C").setDesc("\uC11C\uBC84\uC758 \uD1A0\uD070 \uD3D0\uAE30\uB294 \uD68C\uC0AC WSL\uC758 revoke \uBA85\uB839\uC73C\uB85C \uCC98\uB9AC\uD569\uB2C8\uB2E4. \uC9C4\uD589 \uC911\uC778 \uC791\uC5C5\uC744 \uCDE8\uC18C\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uB85C\uCEEC \uC778\uC99D \uD574\uC81C").onClick(() => {
+    new import_obsidian6.Setting(this.containerEl).setName("\uC774 \uAE30\uAE30\uC758 \uC778\uC99D \uCC38\uC870 \uD574\uC81C").setDesc("\uC11C\uBC84\uC758 \uD1A0\uD070 \uD3D0\uAE30\uB294 \uD68C\uC0AC WSL\uC758 revoke \uBA85\uB839\uC73C\uB85C \uCC98\uB9AC\uD569\uB2C8\uB2E4. \uC9C4\uD589 \uC911\uC778 \uC791\uC5C5\uC744 \uCDE8\uC18C\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.").addButton((control) => control.setButtonText("\uB85C\uCEEC \uC778\uC99D \uD574\uC81C").onClick(() => {
       owner.store.disconnect();
       owner.credentials.clear();
       this.display();
@@ -23175,9 +23379,9 @@ var HermesSettings = class extends import_obsidian5.PluginSettingTab {
   }
 };
 
-// evidence/release-src/src/obsidian-note-tracker.ts
-var import_obsidian6 = require("obsidian");
-var ObsidianNoteTracker = class extends import_obsidian6.Component {
+// evidence/release-0.6-src/src/obsidian-note-tracker.ts
+var import_obsidian7 = require("obsidian");
+var ObsidianNoteTracker = class extends import_obsidian7.Component {
   constructor(app, notes, openChat) {
     super();
     this.app = app;
@@ -23203,9 +23407,9 @@ var ObsidianNoteTracker = class extends import_obsidian6.Component {
     this.bind(document);
     this.registerEvent(this.app.workspace.on("window-open", (_workspace, win) => this.bind(win.document)));
     this.app.workspace.onLayoutReady(() => {
-      const active = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+      const active = this.app.workspace.getActiveViewOfType(import_obsidian7.MarkdownView);
       const visible = this.app.workspace.getLeavesOfType("markdown").filter((leaf) => leaf.view.containerEl.getClientRects().length > 0);
-      const view = active ?? (visible.length === 1 && visible[0]?.view instanceof import_obsidian6.MarkdownView ? visible[0].view : null);
+      const view = active ?? (visible.length === 1 && visible[0]?.view instanceof import_obsidian7.MarkdownView ? visible[0].view : null);
       if (view) this.capture(view);
     });
   }
@@ -23215,11 +23419,11 @@ var ObsidianNoteTracker = class extends import_obsidian6.Component {
     }
   }
   active(leaf) {
-    if (leaf?.view instanceof import_obsidian6.MarkdownView) this.capture(leaf.view);
+    if (leaf?.view instanceof import_obsidian7.MarkdownView) this.capture(leaf.view);
     else if (leaf && leaf.view.getViewType() !== "kk-hermes-chat") this.notes().set(null);
   }
   captureActive(interaction) {
-    const active = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+    const active = this.app.workspace.getActiveViewOfType(import_obsidian7.MarkdownView);
     if (!active) return;
     if (interaction) {
       const selection = active.containerEl.ownerDocument.getSelection();
@@ -23231,6 +23435,7 @@ var ObsidianNoteTracker = class extends import_obsidian6.Component {
     this.capture(active);
   }
   attach(editor, info) {
+    this.notes().pinned = false;
     this.notes().enabled = true;
     this.captureEditor(editor, info);
   }
@@ -23262,7 +23467,7 @@ var ObsidianNoteTracker = class extends import_obsidian6.Component {
       return;
     }
     const file2 = info.file;
-    const valid = () => info.file === file2 && this.app.vault.getAbstractFileByPath(path) === file2 && (!(info instanceof import_obsidian6.MarkdownView) || info.containerEl.isConnected);
+    const valid = () => info.file === file2 && this.app.vault.getAbstractFileByPath(path) === file2 && (!(info instanceof import_obsidian7.MarkdownView) || info.containerEl.isConnected);
     const text = editor.getSelection();
     const from = editor.getCursor("from");
     const to = editor.getCursor("to");
@@ -23279,9 +23484,35 @@ var ObsidianNoteTracker = class extends import_obsidian6.Component {
   }
 };
 
-// evidence/release-src/src/main.ts
+// evidence/release-0.6-src/src/vault-note-source.ts
+var import_obsidian8 = require("obsidian");
+var VaultNoteSource = class {
+  constructor(app) {
+    this.app = app;
+  }
+  app;
+  list() {
+    return this.app.vault.getMarkdownFiles().map((file2) => ({ path: file2.path, label: file2.basename, modified: file2.stat.mtime }));
+  }
+  async load(path) {
+    const file2 = this.app.vault.getAbstractFileByPath(path);
+    if (!(file2 instanceof import_obsidian8.TFile) || file2.extension !== "md") throw new BridgeError("note_source_changed");
+    const mtime = file2.stat.mtime;
+    const content = await this.app.vault.cachedRead(file2);
+    const currentView = () => this.app.workspace.getLeavesOfType("markdown").map((leaf) => leaf.view).find((view) => view instanceof import_obsidian8.MarkdownView && view.file === file2);
+    return { path, read: () => {
+      if (this.app.vault.getAbstractFileByPath(path) !== file2) throw new BridgeError("note_source_changed");
+      const view = currentView();
+      if (view) return view.getViewData();
+      if (file2.stat.mtime !== mtime) throw new BridgeError("note_source_changed");
+      return content;
+    } };
+  }
+};
+
+// evidence/release-0.6-src/src/main.ts
 var VIEW = "kk-hermes-chat";
-var HermesView = class extends import_obsidian7.ItemView {
+var HermesView = class extends import_obsidian9.ItemView {
   constructor(leaf, owner) {
     super(leaf);
     this.owner = owner;
@@ -23299,10 +23530,14 @@ var HermesView = class extends import_obsidian7.ItemView {
   }
   async onOpen() {
     this.panel = new ChatPanel(this.contentEl, this.owner.store, {
-      mobile: import_obsidian7.Platform.isMobile,
+      mobile: import_obsidian9.Platform.isMobile,
       pick: () => new SessionPicker(this.app, this.owner.store).open(),
       settings: () => this.owner.openSettings(),
-      previewContext: (context) => this.owner.previewContext(context)
+      previewContext: (context) => this.owner.previewContext(context),
+      noteSource: new VaultNoteSource(this.app),
+      newTab: () => {
+        void this.app.workspace.getLeaf("tab").setViewState({ type: VIEW, active: true }).catch((error62) => this.owner.store.report(error62));
+      }
     });
   }
   async onClose() {
@@ -23310,7 +23545,7 @@ var HermesView = class extends import_obsidian7.ItemView {
     this.panel = null;
   }
 };
-var HermesPlugin = class extends import_obsidian7.Plugin {
+var HermesPlugin = class extends import_obsidian9.Plugin {
   settings = settingsSchema.parse({});
   credentials = new Credentials(this.app);
   store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
@@ -23351,6 +23586,9 @@ var HermesPlugin = class extends import_obsidian7.Plugin {
       if (document.visibilityState === "visible" && this.credentials.token()) void this.store.connect();
     });
     this.registerDomEvent(window, "online", () => {
+      if (this.credentials.token()) void this.store.connect();
+    });
+    this.app.workspace.onLayoutReady(() => {
       if (this.credentials.token()) void this.store.connect();
     });
   }
@@ -23407,7 +23645,7 @@ var HermesPlugin = class extends import_obsidian7.Plugin {
     }
   }
   openSettings() {
-    const modal = new import_obsidian7.Modal(this.app);
+    const modal = new import_obsidian9.Modal(this.app);
     modal.titleEl.textContent = "KK Hermes Connect \uC124\uC815";
     const tab = new HermesSettings(this.app, this);
     tab.containerEl = modal.contentEl;
@@ -23415,7 +23653,7 @@ var HermesPlugin = class extends import_obsidian7.Plugin {
     modal.open();
   }
   previewContext(context) {
-    const modal = new import_obsidian7.Modal(this.app);
+    const modal = new import_obsidian9.Modal(this.app);
     modal.titleEl.textContent = "\uC804\uC1A1\uD560 \uB178\uD2B8 \uCC38\uC870";
     const source = document.createElement("p");
     source.textContent = noteLabel(context);

@@ -52,6 +52,10 @@ describe("composer preferences and reference controls", () => {
       const panel = new UsagePanel(store); panel.render();
       expect(panel.element.textContent).toContain("5시간 잔여 61% · 초기화 2h 42m");
       expect(panel.element.textContent).not.toContain("비공개");
+      const toggle = panel.element.querySelector("button"); toggle?.click();
+      expect(toggle?.getAttribute("aria-expanded")).toBe("true");
+      panel.render(); expect(toggle?.getAttribute("aria-expanded")).toBe("true");
+      toggle?.click(); expect(toggle?.getAttribute("aria-expanded")).toBe("false");
       store.data.usage = []; panel.render(); expect(panel.element.textContent).toBe("잔여량 정보 없음");
     } finally { vi.useRealTimers(); }
   });

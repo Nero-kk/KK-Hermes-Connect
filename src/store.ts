@@ -47,7 +47,7 @@ export class ChatStore {
       if (!token) throw new BridgeError("authentication_required");
       await this.transport.connect(this.settings.endpoint, token);
       const identity = hello.parse(await this.transport.rpc("bridge.hello", {
-        apiVersion: 1, clientVersion: "0.4.0", deviceId: this.credentials.deviceId,
+        apiVersion: 1, clientVersion: "0.6.0", deviceId: this.credentials.deviceId,
       }));
       if (identity.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
       if (this.settings.serverId !== identity.serverId) throw new BridgeError("server_mismatch");

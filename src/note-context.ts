@@ -22,8 +22,11 @@ export type NoteTarget = {
 export class NoteContextStore {
   enabled = true;
   target: NoteTarget | null = null;
+  pinned = false;
   constructor(private readonly changed: () => void) {}
-  set(target: NoteTarget | null): void { this.target = target; this.changed(); }
+  set(target: NoteTarget | null): void { if (this.pinned) return; this.target = target; this.changed(); }
+  pin(target: NoteTarget): void { this.pinned = true; this.enabled = true; this.target = target; this.changed(); }
+  detach(): void { this.pinned = false; this.enabled = false; this.target = null; this.changed(); }
   toggle(): void { this.enabled = !this.enabled; this.changed(); }
   clearSelection(): void {
     if (this.target) this.target = { path: this.target.path, read: this.target.read };
