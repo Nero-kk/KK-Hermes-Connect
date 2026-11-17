@@ -17,11 +17,11 @@ class BridgeError(Exception):
 
 class Config(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
-    profile: str = "orchestrator_yeon"
-    owner_id: str = "jin"
-    verified_code_sha: str = "3b421578588243f920886e6fe79a6faa87ea026e"
-    hermes: str = "/home/nero/.local/bin/hermes"
-    public_origin: str = "https://jin.tail8208fa.ts.net"
+    profile: str = "default"
+    owner_id: str = "owner"
+    verified_code_sha: str = ""
+    hermes: str = "hermes"
+    public_origin: str = "https://example.ts.net"
     port: int = Field(default=17867, ge=1024, le=65535)
     origins: tuple[str, ...] = ("app://obsidian.md", "capacitor://localhost", "http://localhost")
     state_dir: Path = Path.home() / ".local/share/kk-hermes-connect"

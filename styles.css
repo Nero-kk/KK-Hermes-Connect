@@ -126,7 +126,6 @@ body:not(.is-mobile) .workspace-leaf-content[data-type="kk-hermes-chat"] > .view
   --kkh-small-size: max(10px, calc(var(--font-ui-small, 13px) + var(--kkh-shift)));
   font-size: var(--kkh-body-size);
 }
-.kkh-header:not(:has(p:not([hidden]))) { display: none; }
 .kkh-header { padding: 4px 12px; }
 .kkh-header p, .kkh-model-status, .kkh-operations, .kkh-context-history { font-size: var(--kkh-small-size); }
 .kkh-messages { padding: 12px; }
@@ -183,3 +182,115 @@ body:not(.is-mobile) .workspace-leaf-content[data-type="kk-hermes-chat"] > .view
 .kkh-chat .kkh-toolbar button, .kkh-chat .kkh-usage-toggle { color: var(--kkh-secondary); }
 .kkh-composer textarea::placeholder { color: var(--kkh-secondary); }
 .is-mobile .kkh-chat .kkh-usage-toggle { inline-size: 32px; min-block-size: 32px; block-size: 32px; }
+
+.kkh-chat .kkh-conversation-title {
+  display: block; max-inline-size: 100%; min-block-size: 28px; block-size: auto;
+  padding: var(--size-4-1, 4px) 0; margin: 0; text-align: start;
+  font-size: var(--kkh-ui-size); font-weight: 600; color: var(--text-normal);
+  background: transparent; box-shadow: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kkh-chat .kkh-conversation-title:hover { color: var(--text-accent); }
+.kkh-chat .kkh-conversation-title:disabled { opacity: 1; }
+.kkh-title-editor { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1, 4px); }
+.kkh-title-editor input { flex: 1 1 160px; min-inline-size: 0; font-size: var(--kkh-ui-size); }
+.kkh-chat .kkh-title-editor button { min-block-size: 28px; font-size: var(--kkh-ui-size); padding-inline: var(--size-4-2, 8px); }
+.kkh-title-editor[hidden], .kkh-conversation-title[hidden], .kkh-jump-bottom[hidden] { display: none; }
+.kkh-composer-topbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1, 4px) var(--size-4-2, 8px); }
+.kkh-composer-topbar > .kkh-usage { flex: 1 1 240px; }
+.kkh-composer-topbar > .kkh-toolbar { flex: 0 0 auto; margin-inline-start: auto; }
+.kkh-chat-navigation { position: absolute; inset-inline: 0; inset-block-end: 100%; block-size: 36px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.kkh-chat .kkh-jump-bottom {
+  inline-size: 28px; block-size: 28px; min-block-size: 28px; padding: var(--size-4-1, 4px);
+  border-radius: 50%; border: 1px solid var(--background-modifier-border); background: var(--background-primary);
+  color: var(--text-normal); box-shadow: var(--shadow-s); opacity: 0; pointer-events: auto;
+}
+.kkh-jump-bottom svg { transform: rotate(180deg); margin: auto; }
+.kkh-chat-navigation:has(.kkh-jump-bottom:not([hidden])) { pointer-events: auto; }
+.kkh-chat-navigation:hover .kkh-jump-bottom, .kkh-jump-bottom:focus-visible { opacity: 1; }
+.kkh-composer textarea { font-size: max(10px, calc(var(--kkh-ui-size) + var(--kkh-input-shift, 0px))); }
+.kkh-message > h3 { display: flex; align-items: center; gap: var(--size-4-1, 4px); }
+.kkh-avatar { inline-size: 1em; block-size: 1em; flex: 0 0 1em; object-fit: cover; border-radius: 50%; }
+.kkh-context-meter { display: inline-flex; align-items: center; gap: var(--size-4-1, 4px); padding-inline: var(--size-4-1, 4px); color: var(--kkh-secondary); font-size: var(--kkh-small-size); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kkh-context-meter svg { inline-size: 16px; block-size: 16px; flex: 0 0 16px; }
+.kkh-context-track { opacity: .25; }
+.kkh-context-arc { transform: rotate(-90deg); transform-origin: center; }
+.kkh-context-meter[data-available="false"] .kkh-context-arc { visibility: hidden; }
+.kkh-context-meter:focus-visible, .kkh-title-editor input:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.is-mobile .kkh-composer-topbar > .kkh-usage { flex: 1 1 32px; }
+.is-mobile .kkh-chat .kkh-jump-bottom { inline-size: 32px; block-size: 32px; min-block-size: 32px; opacity: 1; }
+@media (hover: none) { .kkh-chat .kkh-jump-bottom { opacity: 1; } }
+.kkh-model-settings {
+  --kkh-model-row-height: 36px;
+  padding-block: var(--size-4-3, 12px);
+  border-block-end: 1px solid var(--background-modifier-border);
+}
+.kkh-model-settings-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2, 8px);
+  min-block-size: 32px;
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-normal, 400);
+  color: var(--text-normal);
+}
+.kkh-model-settings-heading::-webkit-details-marker { display: none; }
+.kkh-model-settings-chevron { color: var(--text-muted); transform: rotate(-90deg); }
+.kkh-model-settings[open] .kkh-model-settings-chevron { transform: none; }
+.kkh-model-settings > .setting-item-description { margin-block: var(--size-4-2, 8px) var(--size-4-3, 12px); }
+.kkh-model-settings .kkh-model-search { justify-content: flex-start; gap: var(--size-4-3, 12px); }
+.kkh-model-search .setting-item-info { flex: 0 0 auto; }
+.kkh-model-search .setting-item-control { justify-content: flex-start; flex: 1; min-inline-size: 0; }
+.kkh-model-search .search-input-container { inline-size: min(100%, 240px); }
+.kkh-model-search input { inline-size: 100%; min-inline-size: 0; block-size: var(--input-height, 30px); }
+.kkh-model-settings .kkh-model-list {
+  max-block-size: calc(5 * var(--kkh-model-row-height));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.kkh-model-list .setting-item {
+  box-sizing: border-box;
+  block-size: var(--kkh-model-row-height);
+  min-block-size: var(--kkh-model-row-height);
+  padding-block: 0;
+  gap: var(--size-4-2, 8px);
+}
+.kkh-model-list .setting-item-info { min-inline-size: 0; margin-inline-end: 0; }
+.kkh-model-list .setting-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui-small); }
+.kkh-model-list .setting-item-description { display: none; }
+.kkh-model-list .setting-item-control { flex-shrink: 0; gap: var(--size-4-2, 8px); }
+.kkh-model-list .setting-item-control button { inline-size: 28px; block-size: 28px; min-block-size: 28px; padding: var(--size-4-1, 4px); }
+.kkh-model-unavailable .setting-item-name { color: var(--text-muted); }
+.kkh-chat .kkh-model-popup {
+  inline-size: min(390px, calc(100% - 24px));
+  inset-inline-end: auto;
+  grid-template-columns: 32px minmax(0, 1fr) 100px;
+  gap: var(--size-4-2, 8px);
+  padding: var(--size-4-2, 8px);
+  border-radius: var(--radius-l, 14px);
+}
+.kkh-chat .kkh-model-popup.kkh-single-provider { grid-template-columns: minmax(0, 1fr) 100px; }
+.kkh-provider-tabs[hidden] { display: none; }
+.kkh-picker-models, .kkh-picker-efforts { scrollbar-width: thin; overscroll-behavior: contain; }
+.kkh-chat .kkh-model-popup button {
+  border-radius: var(--radius-s, 6px);
+  padding: var(--size-4-1, 4px) var(--size-4-2, 8px);
+  min-block-size: 28px;
+  line-height: 1.4;
+}
+.kkh-chat .kkh-picker-models { padding-inline-end: var(--size-4-2, 8px); }
+.kkh-chat .kkh-picker-models button { justify-content: space-between; }
+.kkh-picker-model-name { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kkh-picker-check { display: inline-flex; flex-shrink: 0; color: var(--text-success, var(--interactive-accent)); visibility: hidden; }
+.kkh-model-popup button[aria-pressed="true"] .kkh-picker-check { visibility: visible; }
+.kkh-picker-heading { padding: var(--size-4-1, 4px) var(--size-4-2, 8px) var(--size-4-2, 8px); }
+.kkh-chat .kkh-model-popup button:disabled { cursor: default; opacity: .5; }
+.kkh-chat .kkh-model-popup button:focus-visible, .kkh-model-settings summary:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
+.is-mobile .kkh-model-settings { --kkh-model-row-height: 44px; }
+.is-mobile .kkh-model-list .setting-item-control button { inline-size: 32px; block-size: 32px; min-block-size: 32px; }
+.is-mobile .kkh-chat .kkh-model-popup button { min-block-size: 36px; }
+.kkh-settings .setting-item-name, .kkh-settings .kkh-model-settings-heading { font-size: var(--font-ui-medium); font-weight: var(--font-normal); }
+.kkh-settings .setting-item-description { font-size: var(--font-ui-smaller); color: var(--text-muted); }
+.kkh-model-settings:not([open]) > :not(summary) { display: none; }

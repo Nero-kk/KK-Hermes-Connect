@@ -22,7 +22,9 @@ export class ModelStore {
       this.epoch++; this.data = null; this.changing = false; this.snapshot = snapshot;
       void this.load(); return;
     }
+    const completed = this.snapshot.running && !snapshot.running;
     this.snapshot = snapshot;
+    if (completed && !this.loading && !this.changing) { void this.load(); return; }
     if (!this.data && !this.loading && !this.changing) { void this.load(); return; }
     if (this.data && !this.loading && !this.changing && snapshot.modelSettings?.model
       && snapshot.revision >= this.data.revision) {

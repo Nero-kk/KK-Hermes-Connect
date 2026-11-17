@@ -6,6 +6,7 @@ import type { Credentials } from "./credentials";
 import { Transport } from "./transport";
 import { ModelStore } from "./model-store";
 import { composeNoteMessage, NoteContextStore } from "./note-context";
+import type { NoteWriter } from "./note-writer";
 
 export class ChatStore {
   readonly transport = new Transport();
@@ -26,7 +27,10 @@ export class ChatStore {
   private stopped = true;
   private refreshing = false;
   private connecting = false;
-  constructor(readonly settings: Settings, readonly credentials: Credentials, private readonly save: () => Promise<void>) {
+  private preparing = false;
+  private opening = 0;
+  private sessionEpoch = 0;
+  constructor(readonly settings: Settings, readonly credentials: Pick<Credentials, "token" | "deviceId">, private readonly save: () => Promise<void>, private readonly noteWriter?: NoteWriter) {
     this.transport.onEvent = (method, params) => this.event(method, params);
     this.transport.onClose = (code) => {
       if (this.stopped) return;
@@ -47,7 +51,7 @@ export class ChatStore {
       if (!token) throw new BridgeError("authentication_required");
       await this.transport.connect(this.settings.endpoint, token);
       const identity = hello.parse(await this.transport.rpc("bridge.hello", {
-        apiVersion: 1, clientVersion: "0.6.0", deviceId: this.credentials.deviceId,
+        apiVersion: 1, clientVersion: "0.7.0", deviceId: this.credentials.deviceId,
       }));
       if (identity.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
       if (this.settings.serverId !== identity.serverId) throw new BridgeError("server_mismatch");
@@ -83,9 +87,16 @@ export class ChatStore {
     return sessionList.parse(await this.transport.rpc("sessions.list", { query }));
   }
   async open(id: string): Promise<void> {
+    const epoch = ++this.sessionEpoch;
+    this.opening++;
+    try { await this.loadSession(id, epoch); }
+    finally { this.opening--; }
+  }
+  private async loadSession(id: string, epoch: number): Promise<void> {
     const previous = this.current?.logicalSessionId;
     const next = snapshot.parse(await this.transport.rpc("sessions.open", { logicalSessionId: sessionId.parse(id),
       ...(previous === id && this.cursor.epoch ? { cursor: { replayEpoch: this.cursor.epoch, sequence: this.cursor.sequence } } : {}) }));
+    if (epoch !== this.sessionEpoch) return;
     if (next.profileId !== this.settings.profileId) throw new BridgeError("profile_mismatch");
     const changed = previous !== next.logicalSessionId || this.cursor.epoch !== next.replayEpoch || this.cursor.instance !== next.instanceId;
     if (changed || !next.running) { this.stream = ""; this.tools.clear(); }
@@ -101,14 +112,15 @@ export class ChatStore {
     this.models.sync(this.current);
     this.cursor = { epoch: next.replayEpoch, sequence: next.sequence, instance: next.instanceId };
     this.settings.lastSession = next.logicalSessionId; await this.save();
-    if (previous && previous !== next.logicalSessionId) await this.transport.rpc("sessions.release", { logicalSessionId: previous });
+    if (epoch === this.sessionEpoch && previous && previous !== next.logicalSessionId) await this.transport.rpc("sessions.release", { logicalSessionId: previous });
     this.emit();
   }
   async refresh(): Promise<void> {
-    if (this.refreshing || this.state === "offline" || this.state === "blocked" || this.state === "connecting") return;
+    if (this.refreshing || this.opening || this.state === "offline" || this.state === "blocked" || this.state === "connecting") return;
     this.refreshing = true;
     try {
       await this.transport.rpc("bridge.ping", { nonce: crypto.randomUUID() });
+      if (this.current && this.noteWriter) await this.noteWriter.poll(this.transport, this.current.logicalSessionId);
       if (this.current) await this.open(this.current.logicalSessionId);
       await this.recover();
     } finally { this.refreshing = false; }
@@ -125,7 +137,27 @@ export class ChatStore {
     for (const row of combined) unique.set(row.id, row);
     this.current = { ...current, messages: [...unique.values()], nextCursor: page.nextCursor }; this.emit();
   }
-  get busy(): boolean { return this.settings.pending.some((item) => item.serverId === this.settings.serverId); }
+  get busy(): boolean { return this.preparing || this.settings.pending.some((item) => item.serverId === this.settings.serverId); }
+  private async prepareText(draft: string, logicalSessionId: string): Promise<string> {
+    this.preparing = true; this.emit();
+    try {
+      const context = this.notes.snapshot();
+      const writeTool = context && this.noteWriter ? await this.noteWriter.prepare(this.transport, logicalSessionId, context) : undefined;
+      return composeNoteMessage(draft, context, writeTool);
+    } finally { this.preparing = false; this.emit(); }
+  }
+  async renameTitle(title: string): Promise<void> {
+    const current = this.current;
+    if (!current || this.state !== "ready") return;
+    const value = title.trim();
+    if (!value || value.length > 200) throw new BridgeError("invalid_title");
+    const updated = snapshot.parse(await this.transport.rpc("sessions.rename", {
+      logicalSessionId: current.logicalSessionId, requestId: crypto.randomUUID(), title: value,
+      expectedRevision: current.revision, expectedGeneration: current.generation,
+    }));
+    if (this.current?.logicalSessionId === updated.logicalSessionId) this.current = updated;
+    this.emit();
+  }
   async submit(kind: Pending["kind"]): Promise<void> {
     if (this.busy || this.models.changing || this.state !== "ready") return;
     const id = operationId.parse(crypto.randomUUID());
@@ -133,7 +165,7 @@ export class ChatStore {
     if (kind !== "create" && !logicalSessionId) return;
     const draft = this.draft;
     if (kind === "send" && !draft.trim()) return;
-    const text = kind === "send" ? composeNoteMessage(draft, this.notes.snapshot()) : "";
+    const text = kind === "send" ? await this.prepareText(draft, logicalSessionId) : "";
     const saved: Pending = { operationId: id, serverId: this.settings.serverId, profileId: this.settings.profileId, logicalSessionId, kind };
     this.settings.pending = [...this.settings.pending, saved]; await this.save(); this.emit();
     const params = kind === "send" ? { operationId: id, logicalSessionId, text }

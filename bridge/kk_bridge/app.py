@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .hub import Hub
 from .metadata import Metadata
 from .models import BridgeError, Config, Device, Rpc
+from .note_edits import EditBody
 from .protocol import parse_rpc
 from .viewer import Viewer
 
@@ -188,11 +189,22 @@ def create_app(config: Config) -> web.Application:
                 group.cancel_scope.cancel()
         metadata.close()
 
-    app = web.Application(client_max_size=8192, middlewares=[boundary])
+    async def note_edit(request: web.Request) -> web.Response:
+        if request.remote not in {"127.0.0.1", "::1"} or request.headers.get("Origin"):
+            raise BridgeError("operation_forbidden")
+        body = EditBody.model_validate_json(await request.read())
+        grant = hub.note_edits.grants.get(body.grant)
+        if grant is None or not any(v.device.device_id == grant.device_id
+                                   and metadata.active(v.device) for v in hub.viewers):
+            raise BridgeError("note_client_unavailable")
+        return web.json_response(await hub.note_edits.submit(body))
+
+    app = web.Application(client_max_size=2 * 1024 * 1024, middlewares=[boundary])
     app.cleanup_ctx.append(lifespan)
     app.router.add_get("/healthz", health)
     app.router.add_post("/v1/pair", pair)
     app.router.add_post("/v1/connect", connect)
+    app.router.add_post("/v1/note-edit", note_edit)
     app.router.add_get("/v1/ws", websocket)
     app.router.add_options("/v1/{action:pair|connect}", health)
     return app

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 
 from .metadata import Metadata
@@ -38,12 +39,22 @@ class Operations:
         try:
             match kind:
                 case "send":
+                    preview = str(identity["text"])
+                    if preview.startswith("[KK_HERMES_OBSIDIAN_CONTEXT_V1]\n"):
+                        try:
+                            attached = json.loads(preview.split("\n", 1)[1])
+                            if (isinstance(attached, dict)
+                                    and isinstance(attached.get("request"), str)):
+                                preview = attached["request"]
+                        except (ValueError, IndexError):
+                            preview = "Obsidian 노트 작업"
                     raw = await self.native.rpc(
                         "prompt.submit",
                         {
                             "session_id": session_id,
                             "submission_id": f"kkh-{operation_id}",
                             "text": identity["text"],
+                            "title_preview": preview[:1000],
                         },
                     )
                     result = safe_receipt(raw)

@@ -83,6 +83,21 @@ class ReasoningChange(SettingsChange):
     effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]
 
 
+class Rename(SettingsChange):
+    title: str = Field(min_length=1, max_length=200)
+
+
+class NotePrepare(Session):
+    path: str = Field(min_length=1, max_length=1024)
+
+
+class NoteComplete(Session):
+    grant: str = Field(min_length=32, max_length=128)
+    success: bool
+    reason: str = Field(default="", max_length=100)
+    backupPath: str = Field(default="", max_length=2048)
+
+
 METHODS: dict[str, type[Params]] = {
     "bridge.hello": Hello,
     "bridge.ping": Ping,
@@ -99,6 +114,10 @@ METHODS: dict[str, type[Params]] = {
     "models.get": Session,
     "models.set": ModelChange,
     "reasoning.set": ReasoningChange,
+    "sessions.rename": Rename,
+    "notes.prepare": NotePrepare,
+    "notes.pending": Session,
+    "notes.complete": NoteComplete,
 }
 
 

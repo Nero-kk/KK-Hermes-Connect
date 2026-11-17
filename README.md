@@ -1,5 +1,15 @@
 # KK Hermes Connect
 
+### 0.7.0 이미지 요청 반영
+
+- GPT 로고, 입력창 위 사용량, 최신 메시지 이동 버튼, 대화 제목 편집, 연이 아바타를 적용했습니다.
+- 모델 선택창은 모델 선택 후 유지되고 사고 강도 선택 후 닫힙니다. 컨텍스트 그래프는 Hermes `session.stats`의 실제 사용 토큰과 한도를 사용하며 정보가 없으면 비워 둡니다.
+- 모델 설정은 접고 펼칠 수 있으며 제공자 설명의 반복 행을 없애고 최대 5개 행 높이로 스크롤합니다. **기본값 설정**은 현재 활성 목록과 순서를 저장하며 **초기화**는 저장한 기본값을 복원합니다. 저장한 값이 없으면 첫 8개를 사용합니다.
+- 설정에서 입력창 안내 문구와 입력창 글자 크기를 바꿀 수 있습니다. 등록 이름은 기기 로컬에서 자동 생성하며 기존 인증은 유지됩니다.
+- 참조 노트에 수정·저장을 요청하면 연이가 연결된 쓰기 명령을 실행하고 Obsidian이 원문 일치 확인, 원본 보관, 저장을 수행합니다. 선택 문장 참조는 그 부분만 바꿉니다. 중간에 편집됐거나 선택이 모호하면 저장하지 않고 이유를 반환합니다. 저장 성공 영수증을 받은 뒤에만 완료를 안내합니다.
+- 원본은 플러그인의 `private/note-history/<ID>.json`에 대상 경로·시각·본문과 함께 보관합니다. 기존 파일 하나만 수정하며 파일 생성·삭제·볼트 밖 경로는 이 쓰기 기능에 포함하지 않습니다. Obsidian 연결과 회사 브리지의 같은 버전이 필요합니다. 앱을 닫거나 다시 로드하면 기존 전송의 쓰기 연결은 만료되므로 최신 노트를 다시 참조해 요청하세요.
+- 대화 제목 자동 생성은 기존 Hermes 기능을 사용하며 참조 JSON 대신 사용자 질문을 제목 후보로 전달합니다. 직접 지정한 제목은 자동 생성으로 덮어쓰지 않습니다.
+
 ### 0.6.0 작은 입력창과 @ 노트 참조
 
 - 상단 대화 제목과 연결 버튼을 제거했습니다. 등록된 기기는 플러그인 로드 후 자동으로 연결합니다.
@@ -17,10 +27,10 @@ Claudian 형태의 입력창: 상단 노트 참조, 선택 줄 칩(클릭해 미
 
 입력창 아래에는 선택한 제공자의 실제 잔여율과 초기화까지 남은 시간을 표시합니다. **브리지도 이 버전의 소스로 업데이트하고 재시작해야 합니다.** Hermes `model.options`의 `usage.windows`가 있는 계정만 수치를 표시하며, 제공되지 않는 경우 “잔여량 정보 없음”으로 표시합니다. 여러 계정의 사용량을 임의로 합산하지 않습니다. 사용량은 1분마다 갱신합니다.
 
-회사 WSL의 기존 `orchestrator_yeon` Gateway에 연결하는 Obsidian 플러그인과 Python 브리지입니다.
-개인용 개발 빌드 `0.4.0`이며, PRD v0.4의 전체 출시 검수가 완료된 버전은 아닙니다.
+원격 Hermes Gateway에 연결하는 Obsidian 플러그인과 Python 브리지입니다.
+개인용 개발 빌드 `0.7.0`이며, PRD v0.4의 전체 출시 검수가 완료된 버전은 아닙니다.
 
-기기 이름은 설정을 다시 열거나 플러그인을 재시작해도 유지되며, 다음 기기 등록에 사용됩니다. 0.2.1에서는 등록·환경 적용·JSON 내보내기를 마친 뒤 앱이 멈추던 공통 버튼 처리 오류를 수정했습니다.
+0.7.0부터 등록 이름은 기기 로컬에서 자동 생성합니다. 기존 수동 기기 이름은 인증을 변경하지 않으며 등록 화면에서는 사용하지 않습니다. 0.2.1에서는 등록·환경 적용·JSON 내보내기를 마친 뒤 앱이 멈추던 공통 버튼 처리 오류를 수정했습니다.
 
 0.3.1은 채팅창을 간결하게 정리했습니다. 내부 세션 ID, 본문 없는 메시지 행, 완료 후 상시 문구와 입력창의 보이는 제목을 숨깁니다. 입력창은 기본 한 줄이며 데스크톱 버튼·선택 상자·글자·하단 여백을 줄였습니다. Slack 전달 안내와 오류·미완료 작업 상태는 표시합니다.
 
@@ -30,7 +40,7 @@ Claudian 형태의 입력창: 상단 노트 참조, 선택 줄 칩(클릭해 미
 
 입력창 위 **노트 참조**에서 대상 노트·선택 행을 확인하고 **보기**로 실제 전송 내용을 미리 볼 수 있습니다. **노트 참조**를 눌러 끄면 질문만 전송합니다. 편집기 우클릭 메뉴 또는 명령 팔레트의 **활성 노트·선택 문장을 Yeon Chat에 첨부**도 사용할 수 있습니다. 노트 전환 시 참조도 바뀌며, 선택한 문장이 편집된 경우 다시 선택하라는 안내를 표시합니다.
 
-예: 문장을 선택하고 “이 문장을 자연스럽게 교정해줘”, 노트 전체를 참조하고 “핵심 내용을 요약해줘”라고 입력합니다. 답변은 채팅으로 받으며 노트를 자동으로 수정하지 않습니다. 전송한 질문 아래 **참조**를 펼치면 당시 첨부한 원문을 확인할 수 있습니다.
+예: 문장을 선택하고 “이 문장을 자연스럽게 교정해줘”, 노트 전체를 참조하고 “핵심 내용을 요약해줘”라고 입력합니다. 분석 답변은 채팅으로 받습니다. 실제 저장을 원하면 “이 노트에 반영하고 저장해줘”처럼 요청하세요. 0.7.0의 연결 쓰기 명령으로 저장하며 원문이 바뀌면 충돌을 반환합니다. 전송한 질문 아래 **참조**를 펼치면 당시 첨부한 원문을 확인할 수 있습니다.
 
 전송 버튼을 누를 때에만 참조 내용을 회사 Hermes로 보내며 서버 대화 이력에 보존됩니다. 원격 서버가 Windows 볼트를 직접 읽는 방식이 아닙니다. 다른 노트·링크·첨부파일은 자동 수집하지 않고, 참조 내용은 접속 환경 JSON에 포함하지 않습니다. 질문과 참조를 합쳐 UTF-8 64 KiB 제한을 초과하면 일부를 잘라 보내지 않고 전송을 막습니다. 필요한 문장만 선택하거나 참조를 꺼 주세요.
 
@@ -59,12 +69,11 @@ Slack·검수 세션·작업 ID는 환경에 보관하는 참조 목록입니다
 
 ## 설치 상태와 첫 연결
 
-- 플러그인: `D:\Jin\Obsidian\Obsidian_Remote\Zero\.obsidian\plugins\KK-Hermes-Connect`
-- 회사 환경: Ubuntu WSL, 사용자 `nero`, Tailscale IP `100.121.112.81`
-- 기본 주소: `https://jin.tail8208fa.ts.net`
-- 프로필: `/home/nero/.hermes/profiles/orchestrator_yeon`
+- 플러그인: 현재 볼트의 `.obsidian/plugins/KK-Hermes-Connect`
+- 서버 환경: 사용 중인 Linux/WSL 환경과 Hermes 프로필
+- 기본 주소: 환경 설정에서 지정한 HTTPS 주소
 - 브리지: `127.0.0.1:17867`, systemd 사용자 서비스 `kk-hermes-bridge`
-- 브리지 환경과 metadata: `/home/nero/.local/share/kk-hermes-connect/`
+- 브리지 환경과 metadata: `$HOME/.local/share/kk-hermes-connect/`
 
 2026-11-16 현재 Tailscale Serve의 HTTPS/WSS 노출과 Windows Zero 볼트의 기기 등록을 완료했습니다.
 Windows에서는 명령 팔레트의 **KK Hermes Connect: Hermes Chat Open**으로 사용할 수 있습니다.
@@ -80,11 +89,11 @@ Windows에서는 명령 팔레트의 **KK Hermes Connect: Hermes Chat Open**으�
 3. 같은 WSL에서 5분 유효·1회용 등록 코드를 발급합니다.
 
    ```bash
-   /home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge pair
+   "$HOME/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge" pair
    ```
 
 4. Obsidian 명령 팔레트에서 `KK Hermes Connect: Hermes Chat Open`을 실행합니다.
-5. 채팅의 **설정**에서 회사 주소·기기 이름·등록 코드를 입력하고 **등록**합니다.
+5. 채팅의 **설정**에서 회사 주소·등록 코드를 입력하고 **등록**합니다. 기기별 이름은 자동으로 정합니다.
 6. **대화 선택**으로 기존 세션을 열거나 **새 대화**를 만듭니다. Android·iPhone·iPad는 각 기기를 따로 등록합니다.
 
 이미 등록한 기기는 **연결 테스트**를 사용합니다. **재등록**은 새로 발급한 1회 코드가 있을 때 사용합니다. 비어 있거나 형식이 잘못된 코드는 서버에 보내지 않고 입력 안내를 표시합니다. 환경 JSON에는 등록 코드나 인증 토큰이 포함되지 않습니다. 프로필 항목의 이름은 **Hermes bot Profile**입니다.
@@ -92,7 +101,7 @@ Windows에서는 명령 팔레트의 **KK Hermes Connect: Hermes Chat Open**으�
 Windows 터미널에서 다른 기기의 등록 코드를 발급하려면 다음을 실행할 수도 있습니다.
 
 ```powershell
-wsl -d Ubuntu -u nero -- /home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge pair
+wsl -d Ubuntu -- bash -lc '"$HOME/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge" pair'
 ```
 
 SecretStorage가 있는 앱에서는 인증값을 해당 API에 저장합니다. 없는 앱에서는 메모리만 사용하므로 앱 종료 뒤 재등록해야 합니다.
@@ -119,9 +128,9 @@ systemctl --user status kk-hermes-bridge
 systemctl --user restart kk-hermes-bridge
 journalctl --user -u kk-hermes-bridge --since today
 tailscale serve status
-/home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge doctor
-/home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge devices
-/home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge revoke DEVICE_ID
+"$HOME/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge" doctor
+"$HOME/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge" devices
+"$HOME/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge" revoke DEVICE_ID
 ```
 
 `doctor`는 버전·기능·세션 수와 필드명만 출력합니다. ticket과 대화 본문을 출력하지 않습니다.
@@ -130,7 +139,7 @@ tailscale serve status
 
 기본 CORS Origin은 `app://obsidian.md`, `capacitor://localhost`, `http://localhost`입니다.
 실제 모바일 Origin이 다르면 설정 파일에 관찰한 정확한 Origin을 추가한 뒤 다시 검증해야 합니다.
-설정은 `/home/nero/.local/share/kk-hermes-connect/config.json`에 Config 모델의 JSON 형식으로 둘 수 있습니다.
+설정은 `$HOME/.local/share/kk-hermes-connect/config.json`에 Config 모델의 JSON 형식으로 둘 수 있습니다.
 인증 HTTP는 표준 fetch의 redirect error, CORS, credentials omit과 타임아웃을 사용합니다.
 인증 실패를 requestUrl·TLS 완화로 우회하지 않습니다.
 
@@ -148,8 +157,8 @@ bun run check
 bun run lint
 bun run test
 bun run build
-UV_PROJECT_ENVIRONMENT=/home/nero/.local/share/kk-hermes-connect/venv uv sync --project bridge --frozen
-/home/nero/.local/share/kk-hermes-connect/venv/bin/pytest bridge/tests -q
+UV_PROJECT_ENVIRONMENT="$HOME/.local/share/kk-hermes-connect/venv" uv sync --project bridge --frozen
+"$HOME/.local/share/kk-hermes-connect/venv/bin/pytest" bridge/tests -q
 ```
 
 실제 Gateway 통합 시험은 새 검수용 세션을 만들며 `live_check`는 기존 모델을 호출합니다.
@@ -157,8 +166,8 @@ UV_PROJECT_ENVIRONMENT=/home/nero/.local/share/kk-hermes-connect/venv uv sync --
 기존 검수 세션은 삭제하지 않아 서버에서 결과를 확인할 수 있습니다.
 
 ```bash
-/home/nero/.local/share/kk-hermes-connect/venv/bin/python -m kk_bridge.live_check
-/home/nero/.local/share/kk-hermes-connect/venv/bin/python -m kk_bridge.security_check
+"$HOME/.local/share/kk-hermes-connect/venv/bin/python" -m kk_bridge.live_check
+"$HOME/.local/share/kk-hermes-connect/venv/bin/python" -m kk_bridge.security_check
 ```
 
 실행 근거와 남은 검수는 [docs/verification.md](docs/verification.md)에 기록합니다.

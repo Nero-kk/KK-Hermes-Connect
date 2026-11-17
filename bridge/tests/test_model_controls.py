@@ -25,9 +25,17 @@ class Authority(Native):
         self.available = True
         self.mutations = 0
         self.guard = False
+        self.stats: JsonObject = {
+            "context_tokens": 24000,
+            "context_length": 128000,
+            "model": "model-a",
+            "provider": "configured",
+        }
 
     async def rpc(self, method: str, params: JsonObject) -> JsonObject:
         match method:
+            case "session.stats":
+                return self.stats
             case "model.options":
                 return {
                     "model": self.model,
@@ -103,6 +111,31 @@ async def test_inventory_projects_only_client_model_fields() -> None:
     assert len(result["options"]) == 2
     assert result["usage"] == [{"provider": "configured", "label": "Session", "usedPercent": 39,
                                 "resetsAt": "2026-11-17T02:42:00Z"}]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    [
+        ({}, {"usedTokens": 24000, "maxTokens": 128000}),
+        ({"context_tokens": 0}, {"usedTokens": 0, "maxTokens": 128000}),
+        ({"context_tokens": 200000}, {"usedTokens": 128000, "maxTokens": 128000}),
+        ({"context_length": None}, None),
+        ({"context_length": 0}, None),
+        ({"context_tokens": -1}, None),
+        ({"context_tokens": True}, None),
+        ({"context_tokens": "24000"}, None),
+        ({"model": "previous-model"}, None),
+        ({"provider": "previous-provider"}, None),
+    ],
+)
+async def test_context_meter_uses_only_current_model_context_stats(
+    overrides: JsonObject, expected: JsonObject | None,
+) -> None:
+    native = Authority()
+    native.stats.update(overrides)
+    result = await ModelControls(native).read("s")
+    assert result["contextUsage"] == expected
 
 
 @pytest.mark.anyio

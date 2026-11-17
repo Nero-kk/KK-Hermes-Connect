@@ -15,6 +15,8 @@ import { ObsidianNoteTracker } from "./obsidian-note-tracker";
 import { noteLabel } from "./note-context";
 import type { NoteAttachment } from "./note-context";
 import { VaultNoteSource } from "./vault-note-source";
+import { VaultNoteWriter } from "./vault-note-writer";
+import { NoteWriter } from "./note-writer";
 
 const VIEW = "kk-hermes-chat";
 
@@ -42,13 +44,14 @@ export default class HermesPlugin extends Plugin {
   credentials: Credentials = new Credentials(this.app);
   store: ChatStore = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
   private saveQueue: Promise<void> = Promise.resolve();
+  private noteWriter(): NoteWriter { return new NoteWriter(new VaultNoteWriter(this.app, this.manifest.dir ?? `${this.app.vault.configDir}/plugins/KK-Hermes-Connect`)); }
   override async onload(): Promise<void> {
     const raw: unknown = await this.loadData();
     const parsed = settingsSchema.safeParse(raw ?? {});
     if (!parsed.success) { notify("KK Hermes Connect 설정을 해석할 수 없습니다. 기존 data.json을 보존하고 설정을 확인하세요."); return; }
     this.settings = parsed.data;
     this.credentials = new Credentials(this.app);
-    this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
+    this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings(), this.noteWriter());
     const notes = new ObsidianNoteTracker(this.app, () => this.store.notes, () => this.openChat());
     this.addChild(notes);
     this.registerView(VIEW, (leaf) => new HermesView(leaf, this));
@@ -89,7 +92,7 @@ export default class HermesPlugin extends Plugin {
     try { await this.saveSettings(); }
     catch (error) { this.settings = previous; if (this.credentials.deviceId) await this.store.connect(); throw error; }
     this.credentials.clear();
-    this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings());
+    this.store = new ChatStore(this.settings, this.credentials, () => this.saveSettings(), this.noteWriter());
     const leaves = this.app.workspace.getLeavesOfType(VIEW);
     for (const leaf of leaves) { await leaf.setViewState({ type: "empty" }); await leaf.setViewState({ type: VIEW }); }
   }

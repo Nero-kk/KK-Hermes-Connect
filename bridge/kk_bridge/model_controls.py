@@ -1,11 +1,21 @@
 from __future__ import annotations
 
-from pydantic import JsonValue
+from typing import ClassVar
+
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 from .models import BridgeError, JsonObject, integer, obj, rows, text
 from .native import Native
 
 EFFORTS = ("none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra")
+
+
+class ContextStats(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, strict=True)
+    context_tokens: int = Field(ge=0)
+    context_length: int = Field(gt=0)
+    model: str
+    provider: str
 
 
 class ModelControls:
@@ -33,6 +43,21 @@ class ModelControls:
                 "config.get", {"session_id": session_id, "key": "reasoning"}
             )
             selection["reasoning"] = level.get("value")
+        stats = await self.native.rpc("session.stats", {"session_id": session_id})
+        context_usage: JsonObject | None = None
+        try:
+            context = ContextStats.model_validate(stats)
+        except ValidationError:
+            context = None
+        if (
+            context is not None
+            and context.model == selection["model"]
+            and context.provider == selection["provider"]
+        ):
+            context_usage = {
+                "usedTokens": min(context.context_tokens, context.context_length),
+                "maxTokens": context.context_length,
+            }
         options: list[JsonValue] = []
         usage: list[JsonValue] = []
         for provider in rows(inventory.get("providers", [])):
@@ -71,6 +96,7 @@ class ModelControls:
             "selection": selection,
             "options": options,
             "usage": usage,
+            "contextUsage": context_usage,
             "revision": integer(raw.get("revision")),
             "generation": integer(raw.get("execution_generation")),
             "running": raw.get("running") is True,

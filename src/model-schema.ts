@@ -7,6 +7,7 @@ export const modelOption = z.object({
   available: z.boolean(), reasoning: z.boolean(), canDisableReasoning: z.boolean(),
 });
 export const modelState = z.object({
+  contextUsage: z.object({ usedTokens: z.number().nonnegative(), maxTokens: z.number().positive() }).nullable().optional(),
   usage: z.array(z.object({ provider: z.string(), label: z.string(), usedPercent: z.number().min(0).max(100), resetsAt: z.string().nullable() })).optional(),
   logicalSessionId: z.string().min(1), selection: modelValues, options: z.array(modelOption).max(5000),
   revision: z.number().int().nonnegative(), generation: z.number().int().nonnegative(), running: z.boolean(),

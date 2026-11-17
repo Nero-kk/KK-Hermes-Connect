@@ -10,10 +10,11 @@ import { UsagePanel } from "./usage-panel";
 import { icon } from "./composer-icons";
 import { MentionPicker } from "./mention-picker";
 import type { VaultNoteSource } from "./vault-note-source";
+import { ContextMeter } from "./context-meter";
 
 type Actions = { readonly pick: () => void; readonly settings: () => void; readonly mobile: boolean;
   readonly previewContext: (context: NoteAttachment) => void;
-  readonly noteSource: Pick<VaultNoteSource, "list" | "load">; readonly newTab: () => void };
+  readonly noteSource: Pick<VaultNoteSource, "list" | "load">; readonly newTab: () => void; readonly avatarUrl?: string };
 const phases: Readonly<Record<string, string>> = {
   preparing: "전송 접수 확인 중", admitted: "접수됨", queued: "대기 중", running: "실행 중",
   completed: "응답 종료 · 업무 검증은 별도", failed: "실패", cancelled: "중단됨", unknown: "실행 결과 확인 필요", expired: "상세 만료",
@@ -34,6 +35,12 @@ export class ChatPanel {
   private readonly context: ContextPanel;
   private readonly usage: UsagePanel;
   private readonly usageTimer: number;
+  private readonly title: HTMLButtonElement;
+  private readonly titleEditor: HTMLFormElement;
+  private readonly titleInput: HTMLInputElement;
+  private readonly jump: HTMLButtonElement;
+  private readonly meter = new ContextMeter();
+  private titleSession = "";
   private timer: number | undefined;
   private requestKey = "";
   private messageKey = "";
@@ -41,9 +48,29 @@ export class ChatPanel {
   private readonly listener = (): void => {
     if (this.timer === undefined) this.timer = window.setTimeout(() => { this.timer = undefined; this.render(); }, 75);
   };
-  constructor(private readonly root: HTMLElement, readonly store: ChatStore, actions: Actions) {
+  constructor(private readonly root: HTMLElement, readonly store: ChatStore, private readonly actions: Actions) {
     root.replaceChildren(); root.classList.add("kkh-chat");
     const header = document.createElement("header"); header.className = "kkh-header";
+    this.title = button(header, "연이 채팅", () => {
+      this.titleSession = store.current?.logicalSessionId ?? "";
+      this.titleInput.value = store.current?.title ?? "";
+      this.titleEditor.hidden = false; this.title.hidden = true; this.titleInput.focus(); this.titleInput.select();
+    });
+    this.title.className = "kkh-conversation-title"; this.title.title = "대화 제목 수정";
+    this.titleEditor = document.createElement("form"); this.titleEditor.className = "kkh-title-editor"; this.titleEditor.hidden = true;
+    this.titleInput = document.createElement("input"); this.titleInput.type = "text"; this.titleInput.maxLength = 200;
+    this.titleInput.required = true; this.titleInput.setAttribute("aria-label", "대화 제목"); this.titleEditor.append(this.titleInput);
+    const saveTitle = button(this.titleEditor, "저장", () => undefined); saveTitle.type = "submit";
+    const closeTitle = (): void => { this.titleEditor.hidden = true; this.title.hidden = false; this.title.focus(); };
+    button(this.titleEditor, "취소", closeTitle);
+    this.titleEditor.addEventListener("keydown", (event) => { if (event.key === "Escape") { event.preventDefault(); closeTitle(); } }, { signal: this.controller.signal });
+    this.titleEditor.addEventListener("submit", (event) => {
+      event.preventDefault(); const title = this.titleInput.value.trim();
+      if (!title || this.titleSession !== store.current?.logicalSessionId) return;
+      saveTitle.disabled = true;
+      this.run(async () => { try { await store.renameTitle(title); closeTitle(); } finally { saveTitle.disabled = false; } });
+    }, { signal: this.controller.signal });
+    header.append(this.titleEditor);
     this.status = document.createElement("p"); this.status.className = "kkh-status";
     this.status.setAttribute("role", "status"); this.source = document.createElement("p");
     const toolbar = document.createElement("nav"); toolbar.className = "kkh-toolbar"; toolbar.setAttribute("aria-label", "대화 관리");
@@ -67,7 +94,7 @@ export class ChatPanel {
     const composer = document.createElement("form"); composer.className = "kkh-composer";
     const label = document.createElement("label");
     this.input = document.createElement("textarea"); this.input.rows = 1; this.input.value = store.draft;
-    this.input.placeholder = "변경 요청, @로 노트 참조"; this.input.setAttribute("aria-label", "Message Yeon");
+    this.input.placeholder = store.settings.composerPlaceholder; this.input.setAttribute("aria-label", "연이에게 메시지 입력");
     const mentions = new MentionPicker(this.input, { list: () => actions.noteSource.list(), load: (path) => actions.noteSource.load(path), notes: store.notes, report: (error) => store.report(error) }, this.controller.signal);
     label.append(this.input); this.send = document.createElement("button");
     this.send.type = "submit"; this.send.className = "kkh-send"; icon(this.send, "arrow-up"); this.send.setAttribute("aria-label", "전송"); this.send.title = "전송";
@@ -76,10 +103,16 @@ export class ChatPanel {
     const box = document.createElement("div"); box.className = "kkh-input-box";
     const footer = document.createElement("div"); footer.className = "kkh-composer-footer";
     const access = document.createElement("span"); access.className = "kkh-access"; const shield = document.createElement("span"); icon(shield, "shield-check"); access.append(shield, document.createTextNode("Hermes 권한")); access.title = "실행 권한은 Hermes 서버 설정을 따릅니다. 승인 요청은 대화에서 확인하세요.";
+    this.models.element.append(this.meter.element);
     footer.append(this.models.element, access, this.send);
     box.append(this.context.selection, label, footer);
     this.usage = new UsagePanel(store.models, this.controller.signal);
-    composer.append(this.operations, toolbar, this.context.element, mentions.element, box, this.usage.element);
+    const topbar = document.createElement("div"); topbar.className = "kkh-composer-topbar"; topbar.append(this.usage.element, toolbar);
+    const navigation = document.createElement("div"); navigation.className = "kkh-chat-navigation";
+    this.jump = button(navigation, "최신 메시지로 이동", () => { this.messages.scrollTop = this.messages.scrollHeight; this.updateJump(); });
+    this.jump.className = "kkh-jump-bottom"; icon(this.jump, "arrow-up"); this.jump.title = "최신 메시지로 이동"; this.jump.setAttribute("aria-label", this.jump.title);
+    this.messages.addEventListener("scroll", () => this.updateJump(), { signal: this.controller.signal });
+    composer.append(this.operations, navigation, topbar, this.context.element, mentions.element, box);
     this.usageTimer = window.setInterval(() => {
       this.usage.render();
       if (store.state === "ready" && !store.models.loading && !store.models.changing && !store.current?.running) void store.models.load();
@@ -101,11 +134,30 @@ export class ChatPanel {
     store.listeners.add(this.listener); this.render();
   }
   private run(action: () => Promise<void>): void { void action().catch((error: unknown) => { this.requestKey = ""; this.store.report(error); }); }
+  private updateJump(): void {
+    const away = this.messages.scrollHeight - this.messages.scrollTop - this.messages.clientHeight > 80;
+    this.jump.hidden = !away;
+  }
+  private author(label: string, assistant: boolean): HTMLElement {
+    const author = document.createElement("h3");
+    if (assistant && this.actions.avatarUrl) {
+      const avatar = document.createElement("img"); avatar.src = this.actions.avatarUrl; avatar.alt = "";
+      avatar.className = "kkh-avatar"; avatar.width = 16; avatar.height = 16;
+      avatar.addEventListener("error", () => avatar.remove(), { once: true }); author.append(avatar);
+    }
+    author.append(document.createTextNode(label)); return author;
+  }
   render(): void {
     const store = this.store; const current = store.current;
     if (this.input.value !== store.draft) this.input.value = store.draft;
     this.root.style.setProperty("--kkh-desktop-shift", `${store.settings.desktopFontStep * 2}px`);
     this.root.style.setProperty("--kkh-mobile-shift", `${store.settings.mobileFontStep * 2}px`);
+    this.root.style.setProperty("--kkh-input-shift", `${store.settings.inputFontStep * 2}px`);
+    this.input.placeholder = store.settings.composerPlaceholder;
+    this.title.textContent = current?.title || "연이 채팅";
+    this.title.disabled = !current || store.state !== "ready" || store.busy;
+    if (!this.titleEditor.hidden && this.titleSession !== current?.logicalSessionId) { this.titleEditor.hidden = true; this.title.hidden = false; }
+    this.meter.render(store.models.data?.contextUsage);
     this.status.textContent = store.status;
     this.status.dataset["state"] = store.state;
     this.source.textContent = current?.source === "slack" ? "Slack 연동 대화 · 응답이 Slack에도 표시될 수 있습니다."
@@ -159,7 +211,7 @@ export class ChatPanel {
     }
     for (const message of visibleMessages) {
       const article = document.createElement("article"); article.dataset["id"] = message.id; article.className = `kkh-message kkh-role-${message.role}`;
-      const author = document.createElement("h3"); author.textContent = message.role === "user" ? "나" : message.role === "assistant" ? "연이" : message.name || message.role;
+      const author = this.author(message.role === "user" ? "나" : message.role === "assistant" ? "연이" : message.name || message.role, message.role === "assistant");
       const attached = message.role === "user" ? decodeNoteMessage(message.text) : null;
       const body = document.createElement("div"); body.className = "kkh-markdown"; renderMarkdown(body, attached?.request ?? message.text);
       article.append(author, body);
@@ -173,12 +225,13 @@ export class ChatPanel {
       this.messages.append(article);
     }
     if (hasStream) { const article = document.createElement("article"); article.className = "kkh-message";
-      const label = document.createElement("h3"); label.textContent = "연이 · 응답 중";
+      const label = this.author("연이 · 응답 중", true);
       const body = document.createElement("div"); body.className = "kkh-stream"; body.textContent = store.stream; article.append(label, body); this.messages.append(article); }
     else if (current?.running) { const waiting = document.createElement("p"); waiting.setAttribute("role", "status"); waiting.textContent = "이 대화에서 실행 중입니다. 실시간 이벤트와 저장 결과를 확인하고 있습니다."; this.messages.append(waiting); }
     for (const description of store.tools.values()) { const tool = document.createElement("p"); tool.className = "kkh-tool"; tool.textContent = description; this.messages.append(tool); }
     const newFirst = this.messages.querySelector("article")?.getAttribute("data-id");
     this.messages.scrollTop = following ? this.messages.scrollHeight : oldFirst !== newFirst ? oldTop + this.messages.scrollHeight - oldHeight : oldTop;
+    this.updateJump();
   }
   destroy(): void {
     this.controller.abort(); this.store.listeners.delete(this.listener);

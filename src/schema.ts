@@ -65,6 +65,9 @@ export const settingsSchema = z.object({
   serverId: z.string().default(""), lastSession: z.string().default(""),
   pending: z.array(pending).default([]),
   visibleModels: z.array(z.string()).nullable().default(null),
+  visibleModelsDefault: z.array(z.string()).nullable().default(null),
+  composerPlaceholder: z.string().max(500).default("변경 요청, @로 노트 참조"),
+  inputFontStep: z.number().int().min(-4).max(4).default(0),
   desktopFontStep: z.number().int().min(-4).max(4).default(-2),
   mobileFontStep: z.number().int().min(-4).max(4).default(-2),
 });

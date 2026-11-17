@@ -11,9 +11,11 @@ from .metadata import Metadata
 from .model_controls import ModelControls
 from .models import BridgeError, Config, JsonObject, obj, text
 from .native import Native
+from .note_edits import NoteEdits
 from .operations import Operations
 from .projection import snapshot, summaries, transcript
 from .requests import Requests
+from .session_controls import SessionControls
 from .viewer import Viewer
 
 
@@ -26,6 +28,8 @@ class Hub:
         self.operations = Operations(self.native, metadata)
         self.requests = Requests(self.native)
         self.model_controls = ModelControls(self.native)
+        self.session_controls = SessionControls(self.native)
+        self.note_edits = NoteEdits(config.port)
         self.viewers: list[Viewer] = []
         self.mounted: dict[str, float] = {}
         self.catalog: dict[str, JsonObject] = {}
@@ -69,7 +73,7 @@ class Hub:
             raw["info"] = {
                 **info,
                 "source": known.get("source", "unknown"),
-                "title": known.get("title", "Chat with Yeon"),
+                "title": info.get("title") or known.get("title", "Chat with Yeon"),
             }
         operations: list[JsonValue] = []
         for item in self.metadata.for_session(canonical, viewer.device):
@@ -154,10 +158,24 @@ class Hub:
                 return await self.operations.get(text(params.get("operationId")), viewer.device)
             case "operations.cancel":
                 return await self.operations.cancel(text(params.get("operationId")), viewer.device)
+            case "notes.pending":
+                return self.note_edits.pending(viewer.device, text(params.get("logicalSessionId")))
+            case "notes.complete":
+                return self.note_edits.complete(text(params.get("grant")), viewer.device,
+                                                text(params.get("logicalSessionId")),
+                                                {"success": params["success"],
+                                                 "reason": params.get("reason", ""),
+                                                 "backupPath": params.get("backupPath", "")})
         session_id = text(params.get("logicalSessionId"))
         if session_id not in viewer.sessions:
             raise BridgeError("session_not_open")
         match method:
+            case "sessions.rename":
+                await self.session_controls.rename(params)
+                self.catalog.pop(session_id, None)
+                return await self.open(session_id, viewer)
+            case "notes.prepare":
+                return self.note_edits.prepare(viewer.device, session_id, text(params.get("path")))
             case "sessions.history":
                 return await self.history(params)
             case "sessions.release":

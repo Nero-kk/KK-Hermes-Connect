@@ -4,8 +4,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/mnt/d/jin/obsidian/obsidian_remote/zero/.obsidian/plugins/KK-Hermes-Connect/bridge
-ExecStart=/home/nero/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge serve
+WorkingDirectory=%h/kk-hermes-connect/bridge
+ExecStart=%h/.local/share/kk-hermes-connect/venv/bin/kk-hermes-bridge serve
 Restart=on-failure
 RestartSec=5
 UMask=0077

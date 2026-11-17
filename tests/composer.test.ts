@@ -16,10 +16,12 @@ describe("composer preferences and reference controls", () => {
     expect(visibleOptions(options, [key(5), "gone", key(1), key(5)]).map((item) => item.model)).toEqual(["model-5", "model-1"]);
     expect(visibleOptions(options, [])).toEqual([]);
   });
-  it("shows only curated models plus the active model and sends an actual popup choice", async () => {
-    const rpc = vi.fn(async (): Promise<unknown> => ({}));
+  it("keeps the curated popup open through model acknowledgment and closes after reasoning selection", async () => {
+    const initial = { logicalSessionId: "s", selection: { model: "model-0", provider: "codex", reasoning: "medium", reasoningWire: "medium" }, revision: 1, generation: 1, running: false, options };
+    const selected = { ...initial, selection: { ...initial.selection, model: "model-5" }, revision: 2 };
+    const rpc = vi.fn(async (): Promise<unknown> => ({ status: "applied", settings: selected }));
     const store = new ModelStore({ rpc }, () => undefined);
-    store.data = { logicalSessionId: "s", selection: { model: "model-0", provider: "codex", reasoning: "medium", reasoningWire: "medium" }, revision: 1, generation: 1, running: false, options };
+    store.data = initial;
     const controller = new AbortController();
     const panel = new ModelPanel(store, controller.signal, () => [key(5), key(1)]);
     panel.render(false, false); document.body.append(panel.element);
@@ -30,8 +32,17 @@ describe("composer preferences and reference controls", () => {
     expect(document.activeElement).toBe(focus);
     const pick = [...panel.element.querySelectorAll<HTMLButtonElement>(".kkh-picker-models button")].find((item) => item.textContent === "model-5");
     pick?.click();
-    expect(panel.element.querySelector(".kkh-model-popup")?.getAttribute("hidden")).toBe("");
+    panel.render(false, false);
+    expect(panel.element.querySelector<HTMLElement>(".kkh-model-popup")?.hidden).toBe(false);
+    expect([...panel.element.querySelectorAll<HTMLButtonElement>(".kkh-picker-efforts button")].every((item) => item.disabled)).toBe(true);
     expect(rpc).toHaveBeenCalledWith("models.set", expect.objectContaining({ provider: "codex", model: "model-5" }));
+    await vi.waitFor(() => expect(store.changing).toBe(false));
+    panel.render(false, false);
+    expect(panel.element.querySelector<HTMLElement>(".kkh-model-popup")?.hidden).toBe(false);
+    const reasoning = [...panel.element.querySelectorAll<HTMLButtonElement>(".kkh-picker-efforts button")].find((item) => item.textContent === "High");
+    reasoning?.click();
+    expect(rpc).toHaveBeenLastCalledWith("reasoning.set", expect.objectContaining({ effort: "high", expectedRevision: 2 }));
+    expect(panel.element.querySelector<HTMLElement>(".kkh-model-popup")?.hidden).toBe(true);
     await vi.waitFor(() => expect(store.changing).toBe(false)); controller.abort(); panel.element.remove();
   });
   it("removes the selected range while retaining the note reference", () => {

@@ -1,5 +1,19 @@
 # 검증 기록
 
+## 0.7.0 이미지 12개 보완 (2026-11-17)
+
+- 실제 Zero 볼트의 Obsidian 1.15.1과 사용자 브리지에 빌드 0.7.0을 적용했다. 기존 대화·초안·참조·모델 표시 설정을 검수 뒤 복원했다. 서버 Gateway 자체는 교체하지 않았다.
+- TypeScript 검사와 oxlint 통과. Vitest 12개 파일 95개 시험, 브리지 pytest 37개 시험 통과. 새 Python 노트 쓰기·도구·제목 모듈 basedpyright 오류·경고 0개, 브리지 전체 Ruff 통과. Windows 파일시스템에서 느린 Vitest를 같은 소스·의존성의 `/tmp/kkh-verification.TSgtBJ` 사본에서도 실행해 통과했다.
+- 저장 호출을 생략하거나 늦은 세션 응답 차단을 제거한 별도 검수 사본에서 신규 회귀 시험 3개가 의도한 이유로 실패했다. 사본을 원본으로 복원한 뒤 관련 시험 5개가 다시 통과했다. 설치된 소스에는 변이를 적용하지 않았다.
+- `tools/qa_revision.py`: 실제 플러그인 DOM으로 320/390/570/1440px × light/dark × 채팅/모델 팝업/펼친 설정 24개 캡처. 가로 넘침 없음, 입력창 화면 안 배치, 아바타 로딩, 설정 목록의 5개 행 높이를 확인했다. 펼친 목록 높이는 모바일 220px/행 44px, PC 180px/행 36px다. `evidence/revision-layout.json`과 `revision-*.png`에 기록했다. 모바일은 데스크톱 CSS 재현이며 실기기 검증은 아니다.
+- 실제 설정 버튼으로 현재 활성 모델 4개를 기본값으로 저장하고 순서를 바꾼 뒤 초기화하여 저장한 순서 복원을 확인했다. 제공자 검색도 실제 입력 이벤트로 확인했다. 검수 전 사용자 설정을 복원했다.
+- `tools/qa_note_write.py`: 생성한 검수 노트에서 실제 ChatStore.send → Hermes terminal의 연결 쓰기 명령 → Obsidian Vault.process → 저장 영수증 순서로 `QA_BEFORE`를 `QA_AFTER`로 저장했다. `private/note-history`의 원본 백업과 저장 후 파일 일치를 확인했다. 사용자 업무 노트는 이 검수에서 수정하지 않았다. 검수 노트와 대화는 재현 증거로 남겼다.
+- 같은 실제 대화에서 사용자 질문 기반 자동 제목 `QA_BEFORE를 QA_AFTER로 변경`, 직접 지정한 제목의 서버 저장·재조회, 실제 컨텍스트 `33,378 / 500,000` 토큰을 확인했다. 복원한 과거 대화처럼 서버가 한도를 반환하지 않으면 퍼센트를 만들지 않고 정보 없음으로 표시한다.
+- `tools/qa_note_conflict.py`: 쓰기 연결 준비 뒤 검수 노트를 로컬에서 변경하고 같은 실제 명령을 호출했다. `success=false`, `note_write_conflict` 반환과 로컬 수정 보존을 확인한 뒤 검수 노트를 복원했다. `evidence/revision-note-write.json`, `revision-note-conflict.json`에 기록했다.
+- 실검증에서 새 대화 생성과 자동 새로고침의 세션 해제가 겹치는 오류를 발견했다. 열기 중 새로고침을 건너뛰고 늦은 응답이 현재 대화·해제 대상을 바꾸지 못하도록 수정했다. 경쟁 회귀 시험과 실제 새 대화 저장 흐름을 다시 통과했다.
+- 화면 자체 검토: 기존 테마 토큰 사용, GPT 로고, 상단 사용량, 제목 편집, 팝업 모델/사고 양쪽 선택, 컨텍스트 그래프, 작은 로컬 아바타를 확인했다. 기존 안전한 본문 Markdown 렌더링과 별개로 지정 로컬 아바타만 허용한다. 연결 쓰기는 기기·세션·단일 노트에 묶인 30분 단회 권한을 사용하며 일반 파일 경로 쓰기 RPC를 제공하지 않는다.
+- WCAG 2.2 AA: 키보드 Escape/Tab 및 포커스, 320px 가로 넘침, 24px 이상 포인터 대상은 구현·회귀 시험과 실제 화면으로 확인했다. 사용자 테마의 전체 색상 대비·200% 텍스트 간격·모바일 실기기 전 항목을 측정하지 않았으므로 전체 AA 준수 인증으로 보고하지 않는다. 기존 Obsidian 오류 기록의 `bounded-component-assimilation`, `loadLayout: i is not iterable`, 이전 연결 끊김 기록은 수정 전 로그다.
+
 ## 0.6.0 작은 도구 모음 및 @ 노트 선택 (2026-11-17)
 
 - 등록된 기기의 플러그인 재로드 직후, 채팅 열기나 연결 명령 없이 `store.state=ready`를 확인했다. 상단 h2와 연결 버튼은 제거했다.
@@ -88,11 +102,10 @@
 ## 관찰한 실제 환경
 
 - Windows Obsidian 실행 화면: 1.15.0, `app://obsidian.md`, SecretStorage 사용 가능.
-- Ubuntu WSL의 기존 Hermes profile: `/home/nero/.hermes/profiles/orchestrator_yeon`.
-- 실제 Gateway와 CLI code identity 모두 `3b421578588243f920886e6fe79a6faa87ea026e`.
+- Ubuntu WSL의 Hermes profile과 Gateway code identity를 확인했다. 개인 경로와 식별값은 공개 기록에서 생략한다.
 - runtime.describe: durable-admission-v1, event-replay-v1, local-cli-create-v1, clarify-batch-v1, session-client-v1, session-transcript-v1, session-list-picker-v1 등.
 - 실제 저장 목록은 200개 반환. 출처 cli, tui, local, slack, cron 확인. cursor/query는 native 목록에 보내지 않음.
-- Tailscale DNS `jin.tail8208fa.ts.net`, Ubuntu 내부 Tailscale Running.
+- Tailscale DNS를 통한 HTTPS/WSS 연결과 Ubuntu 내부 Tailscale 상태를 확인했다.
 - 사용자 systemd 서비스 `kk-hermes-bridge` enabled/active, linger yes.
 
 ## 실행한 동작
@@ -146,13 +159,13 @@ Tailscale operator 권한을 추가하거나 Funnel을 설정하지 않았다.
 
 | 항목 | 실제 관찰 |
 | --- | --- |
-| 주소 | `https://jin.tail8208fa.ts.net`, Tailscale Serve의 `/` → `127.0.0.1:17867` |
+| 주소 | 설정된 Tailscale HTTPS 주소, Serve의 `/` → `127.0.0.1:17867` |
 | Windows 인증 HTTP | Obsidian의 실제 `app://obsidian.md`에서 표준 fetch로 health 200, 1회 코드 교환 성공 |
 | CORS | 실제 OPTIONS 응답 204, 정확한 Origin 허용, Authorization·Content-Type 허용 |
 | WSS | 실제 플러그인의 Transport와 bridge.hello를 통해 `ready`, 고정 profile 일치 |
 | Windows 기기 인증 | SecretStorage에 저장. 새로 생성한 등록 코드·token 원문은 증거에 기록하지 않음 |
-| 실제 새 세션 | `local-9f8edea19c496dc3acdd13d8d006edebd47c9f76373bf55d67e12860a2b934e7`, source gui |
-| 실제 전송 | operation `974ebcf6-8d40-430c-9fde-149f334dbbc9`, queued → completed, 미완료 전송 0개 |
+| 실제 새 세션 | 새 local 세션, source gui |
+| 실제 전송 | queued → completed, 미완료 전송 0개 |
 | 스트리밍 | 실제 ChatStore listener에서 stream 길이 최대 144자 관찰. 본문은 로그에 복제하지 않음 |
 | 저장 이력 | 같은 세션의 user 1행과 assistant 2행 확인. native row ID를 그대로 유지 |
 | 명시적 재접속 | disconnect → connect 후 ready, 같은 canonical ID·같은 저장 row ID 목록, 미완료 전송 0개 |

@@ -21,6 +21,15 @@ export class Credentials {
     }
   }
   get deviceId(): string { return this.record?.deviceId ?? ""; }
+  deviceLabel(): string {
+    const key = `${this.key}:label`;
+    const stored = localStorage.getItem(key);
+    if (stored) return stored;
+    const platform = /Android/i.test(navigator.userAgent) ? "Android" : /iPad|iPhone/i.test(navigator.userAgent) ? "iOS" : /Windows/i.test(navigator.userAgent) ? "Windows" : "Obsidian";
+    const label = `${platform} · ${crypto.randomUUID().slice(0, 8)}`;
+    localStorage.setItem(key, label);
+    return label;
+  }
   token(): string | null {
     if (this.memory) return this.memory;
     if (this.record && this.app.secretStorage) return this.app.secretStorage.getSecret(this.record.secretRef);

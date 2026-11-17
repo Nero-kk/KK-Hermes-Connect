@@ -30,13 +30,6 @@ export class HermesSettings extends PluginSettingTab {
           void owner.saveSettings().catch((error: unknown) => notify(errorText(error)));
         }));
     new Setting(this.containerEl).setName("Hermes bot Profile").setDesc(owner.settings.profileId);
-    new Setting(this.containerEl).setName("기기 이름").setDesc("변경한 이름을 저장하며, 기기 등록 시 이 이름을 사용합니다.").addText((input) => {
-      input.inputEl.maxLength = 100;
-      input.setValue(owner.settings.deviceLabel).onChange((value) => {
-        owner.settings.deviceLabel = value;
-        void owner.saveSettings().catch((error: unknown) => { notify(errorText(error)); });
-      });
-    });
     new Setting(this.containerEl).setName("1회 등록 코드")
       .setDesc("회사 WSL에서 kk-hermes-bridge pair로 새 코드를 발급해 입력하세요. 5분 동안 한 번만 쓸 수 있으며, 환경 JSON에는 포함되지 않습니다.")
       .addText((input) => { input.inputEl.type = "password"; input.inputEl.autocomplete = "off"; input.inputEl.maxLength = 128; input.onChange((value) => { code = value.trim(); }); });
@@ -45,11 +38,11 @@ export class HermesSettings extends PluginSettingTab {
       .addButton((control) => control.setButtonText(owner.credentials.deviceId ? "재등록" : "등록").setCta().onClick(() => {
         void runButtonAction(control, async () => {
           endpoint(owner.settings.endpoint);
-          const label = owner.settings.deviceLabel.trim();
+          const label = owner.credentials.deviceLabel();
           const paired = await owner.store.transport.pair(owner.settings.endpoint, code, label);
           if (paired.profileId !== owner.settings.profileId) throw new BridgeError("profile_mismatch");
           owner.credentials.clear(); owner.credentials.store(paired.deviceId, paired.token);
-          owner.settings.serverId = paired.serverId; owner.settings.deviceLabel = label; await owner.saveSettings();
+          owner.settings.serverId = paired.serverId; await owner.saveSettings();
           code = ""; notify("이 기기를 등록했습니다."); this.display(); await owner.store.connect();
         });
       }));

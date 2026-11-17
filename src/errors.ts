@@ -3,6 +3,12 @@ export class BridgeError extends Error {
 }
 
 const labels: Readonly<Record<string, string>> = {
+  invalid_title: "대화 제목은 1~200자로 입력하세요.",
+  note_write_conflict: "전송한 뒤 노트가 변경되어 저장하지 않았습니다. 최신 노트를 다시 참조해 요청하세요.",
+  note_write_failed: "노트 저장 결과를 확인하지 못했습니다. 원본과 변경 이력을 확인하세요.",
+  note_grant_expired: "노트 쓰기 연결이 만료되었습니다. 노트를 다시 참조해 요청하세요.",
+  note_client_unavailable: "Obsidian 노트 쓰기 연결에 응답이 없습니다. 앱 연결 상태를 확인하세요.",
+  note_invalid_path: "현재 볼트의 일반 Markdown 노트만 수정할 수 있습니다.",
   note_source_changed: "참조 노트가 바뀌었습니다. 전송할 노트를 다시 클릭하세요.",
   note_selection_changed: "선택한 문장이 편집되어 참조가 만료되었습니다. 문장을 다시 선택하세요.",
   note_context_too_large: "질문과 노트 참조가 합쳐서 64 KiB를 초과합니다. 필요한 문장만 선택하거나 노트 참조를 꺼 주세요.",
@@ -33,6 +39,12 @@ const labels: Readonly<Record<string, string>> = {
   request_expired: "질문이 만료되었거나 실행 상태가 바뀌었습니다.",
   payload_too_large: "입력 또는 이력이 크기 제한을 초과했습니다.",
   auth_transport_unsupported: "인증 통신에 실패했습니다. HTTPS 인증서·CORS·리다이렉트 설정을 확인하세요.",
+  auth_network_failed: "회사 서버에 연결할 수 없습니다. 인터넷·Tailscale 연결과 HTTPS 인증서를 확인하세요.",
+  auth_redirect_blocked: "회사 서버 주소가 다른 주소로 리다이렉트됩니다. 설정에 입력한 HTTPS 주소를 확인하세요.",
+  auth_origin_blocked: "이 Obsidian 앱의 출처가 회사 브리지에서 허용되지 않았습니다. 회사 WSL의 브리지 출처 설정을 확인하세요.",
+  auth_server_unavailable: "회사 브리지가 요청을 받았지만 응답하지 못했습니다. 회사 PC에서 kk-hermes-bridge 상태를 확인하세요.",
+  auth_registration_code: "1회 등록 코드가 틀렸거나 만료되었습니다. 회사 WSL에서 새 코드를 발급해 바로 입력하세요.",
+  auth_server_http_error: "회사 서버가 등록 요청을 거부했습니다. 입력 주소와 회사 브리지 상태를 확인하세요.",
   invalid_endpoint: "경로나 사용자 정보가 없는 HTTPS 서버 주소를 입력하세요.",
   invalid_ws_target: "서버가 다른 대상의 WebSocket 주소를 반환해 연결을 중단했습니다.",
   rate_limited: "등록 시도가 많습니다. 잠시 후 다시 시도하세요.",

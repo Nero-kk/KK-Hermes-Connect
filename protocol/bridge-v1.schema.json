@@ -402,6 +402,110 @@
       ],
       "title": "ReasoningChange",
       "type": "object"
+    },
+    "Rename": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "requestId": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Requestid",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "minimum": 0,
+          "title": "Expectedrevision",
+          "type": "integer"
+        },
+        "expectedGeneration": {
+          "minimum": 0,
+          "title": "Expectedgeneration",
+          "type": "integer"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "requestId",
+        "expectedRevision",
+        "expectedGeneration",
+        "title"
+      ],
+      "title": "Rename",
+      "type": "object"
+    },
+    "NotePrepare": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "path"
+      ],
+      "title": "NotePrepare",
+      "type": "object"
+    },
+    "NoteComplete": {
+      "additionalProperties": false,
+      "properties": {
+        "logicalSessionId": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logicalsessionid",
+          "type": "string"
+        },
+        "grant": {
+          "maxLength": 128,
+          "minLength": 32,
+          "title": "Grant",
+          "type": "string"
+        },
+        "success": {
+          "title": "Success",
+          "type": "boolean"
+        },
+        "reason": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Reason",
+          "type": "string"
+        },
+        "backupPath": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Backuppath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logicalSessionId",
+        "grant",
+        "success"
+      ],
+      "title": "NoteComplete",
+      "type": "object"
     }
   },
   "oneOf": [
@@ -807,6 +911,114 @@
         },
         "params": {
           "$ref": "#/$defs/ReasoningChange"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "sessions.rename"
+        },
+        "params": {
+          "$ref": "#/$defs/Rename"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "notes.prepare"
+        },
+        "params": {
+          "$ref": "#/$defs/NotePrepare"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "notes.pending"
+        },
+        "params": {
+          "$ref": "#/$defs/Session"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "method": {
+          "const": "notes.complete"
+        },
+        "params": {
+          "$ref": "#/$defs/NoteComplete"
         }
       }
     }

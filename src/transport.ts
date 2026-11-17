@@ -36,14 +36,30 @@ async function post(origin: URL, action: string, payload: { readonly body?: unkn
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (payload.token) headers["Authorization"] = `Bearer ${payload.token}`;
-    const response = await fetch(new URL(`/v1/${action}`, origin), {
-      method: "POST", headers, body: JSON.stringify(payload.body ?? {}),
-      redirect: "error", mode: "cors", credentials: "omit", cache: "no-store", signal: controller.signal,
-    });
+    let response: Response;
+    try {
+      response = await fetch(new URL(`/v1/${action}`, origin), {
+        method: "POST", headers, body: JSON.stringify(payload.body ?? {}),
+        redirect: "error", mode: "cors", credentials: "omit", cache: "no-store", signal: controller.signal,
+      });
+    } catch (error) {
+      if (controller.signal.aborted) throw new BridgeError("endpoint_unreachable");
+      if (error instanceof TypeError) {
+        const message = error.message.toLowerCase();
+        if (message.includes("redirect")) throw new BridgeError("auth_redirect_blocked");
+        if (message.includes("fetch") || message.includes("cors") || message.includes("network")) throw new BridgeError("auth_network_failed");
+        throw new BridgeError("auth_transport_unsupported");
+      }
+      throw error;
+    }
     const value: unknown = await response.json();
     if (!response.ok) {
       const error = z.object({ error: z.string().regex(/^[a-z_]{1,80}$/) }).safeParse(value);
-      throw new BridgeError(error.success ? error.data.error : "authentication_required");
+      if (error.success && error.data.error === "origin_rejected") throw new BridgeError("auth_origin_blocked");
+      if (error.success && error.data.error === "invalid_pair_code") throw new BridgeError("auth_registration_code");
+      if (response.status >= 500) throw new BridgeError("auth_server_unavailable");
+      if (response.status >= 300 && response.status < 400) throw new BridgeError("auth_redirect_blocked");
+      throw new BridgeError(error.success ? error.data.error : "auth_server_http_error");
     }
     return value;
   } catch (error) {

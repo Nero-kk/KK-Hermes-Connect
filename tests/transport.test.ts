@@ -4,6 +4,29 @@ import { endpoint, socketTarget, Transport } from "../src/transport";
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe("registration input", () => {
+  it("distinguishes an expired pair code returned by the company bridge", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "invalid_pair_code" }), { status: 401 })));
+
+    await expect(new Transport().pair("https://company.test", "a".repeat(32), "Home"))
+      .rejects.toMatchObject({ code: "auth_registration_code" });
+  });
+  it("distinguishes a blocked Obsidian origin returned by the bridge", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "origin_rejected" }), { status: 403 })));
+
+    await expect(new Transport().pair("https://company.test", "a".repeat(32), "Home"))
+      .rejects.toMatchObject({ code: "auth_origin_blocked" });
+  });
+  it("distinguishes redirect and network failures without exposing internal exception text", async () => {
+    const redirect = new TypeError("Failed to fetch: redirect mode error");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(redirect).mockRejectedValueOnce(new TypeError("Failed to fetch")));
+    const transport = new Transport();
+
+    await expect(transport.pair("https://company.test", "a".repeat(32), "Home"))
+      .rejects.toMatchObject({ code: "auth_redirect_blocked" });
+    await expect(transport.pair("https://company.test", "a".repeat(32), "Home"))
+      .rejects.toMatchObject({ code: "auth_network_failed" });
+    expect(redirect.message).not.toContain("company.test");
+  });
   it.each([
     { code: "", label: "QA device", error: "pair_code_required" },
     { code: "short", label: "QA device", error: "invalid_pair_code_format" },
